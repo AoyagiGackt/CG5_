@@ -194,6 +194,7 @@
     <ClCompile Include="engin\graphics\cpp\ImGuiManager.cpp" />
     <ClCompile Include="engin\graphics\cpp\Skeleton.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkinCS.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinCommon.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinnedObject3d.cpp" />
@@ -328,6 +329,7 @@
     <ClInclude Include="engin\graphics\h\MeshManager.h" />
     <ClInclude Include="engin\graphics\h\Skeleton.h" />
     <ClInclude Include="engin\graphics\h\SkeletonDebugRenderer.h" />
+    <ClInclude Include="engin\graphics\h\SkinCS.h" />
     <ClInclude Include="engin\graphics\h\SkinnedModel.h" />
     <ClInclude Include="engin\graphics\h\SkinCommon.h" />
     <ClInclude Include="engin\graphics\h\SkinnedObject3d.h" />

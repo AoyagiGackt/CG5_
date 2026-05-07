@@ -27,6 +27,8 @@ public:
     const std::string&               GetTextureFilePath()     const { return textureFilePath_; }
     const std::vector<Matrix4x4>&   GetInverseBindMatrices() const { return inverseBindMatrices_; }
     const std::vector<std::string>& GetBoneNames()           const { return boneNames_; }
+    ID3D12Resource*                  GetVertexResource()      const { return vertexResource_.Get(); }
+    UINT                             GetVertexCount()         const { return static_cast<UINT>(vertices_.size()); }
 
 private:
     void LoadGltfFile(DirectXCommon* dxCommon, const std::string& filePath);

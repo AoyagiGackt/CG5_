@@ -1,7 +1,9 @@
 #pragma once
 #include "Animation.h"
 #include "MakeAffine.h"
+#include "ModelCommon.h"
 #include "Skeleton.h"
+#include "SkinCS.h"
 #include "SkinnedModel.h"
 #include "SkinCommon.h"
 #include <string>
@@ -24,10 +26,11 @@ public:
     static void SetLightViewProjection(const Matrix4x4& lvp);
     static void SetCommonObjectCommon(Object3dCommon* objectCommon);
     static void SetCommonShadowManager(ShadowManager* shadowManager);
+    static void SetCommonModelCommon(ModelCommon* modelCommon);
 
     void Initialize(SkinCommon* skinCommon);
 
-    void SetModel(SkinnedModel* model)        { model_ = model; }
+    void SetModel(SkinnedModel* model);  // SkinCS の初期化も行う
     void SetAnimation(Animation anim)         { animation_ = std::move(anim); }
     void SetSkeleton(Skeleton skeleton)       { skeleton_  = std::move(skeleton); }
     void SetEnvCubemapFilePath(const std::string& path) { envCubemapFilePath_ = path; }
@@ -72,9 +75,15 @@ private:
     static Matrix4x4       commonLightVP_;
     static Object3dCommon* commonObjectCommon_;
     static ShadowManager*  commonShadowManager_;
+    static ModelCommon*    commonModelCommon_;
 
     SkinCommon*   skinCommon_ = nullptr;
     SkinnedModel* model_      = nullptr;
+
+    SkinCS skinCS_;
+    bool   skinCSReady_ = false;
+
+    void InitializeSkinCS();
 
     std::string envCubemapFilePath_;
 

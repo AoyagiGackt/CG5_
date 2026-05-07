@@ -73,6 +73,7 @@ void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* aud
     SkinnedObject3d::SetCommonCamera(camera_.get());
     SkinnedObject3d::SetCommonObjectCommon(objectCommon_.get());
     SkinnedObject3d::SetCommonShadowManager(shadowManager_.get());
+    SkinnedObject3d::SetCommonModelCommon(modelCommon_.get());
 
     // ----- エフェクト・進行管理 -----
     // 楕円パーティクルグループ（circle2.png を使用）
