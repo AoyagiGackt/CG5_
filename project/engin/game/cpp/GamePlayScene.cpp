@@ -76,6 +76,27 @@ void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* aud
     animCube_ = hoge.get();
     gameObjects_.push_back(std::move(hoge));
 
+    // ----- スキンメッシュ（human）-----
+    skinCommon_ = std::make_unique<SkinCommon>();
+    skinCommon_->Initialize(dxCommon_);
+
+    modelHuman_ = std::make_unique<SkinnedModel>();
+    modelHuman_->Initialize(dxCommon_,
+        "Resources/human/sneakWalk.gltf",
+        "Resources/human/white.png");
+
+    Node humanRootNode = LoadNodeHierarchyFromFile("Resources/human", "sneakWalk.gltf");
+    Skeleton humanSkeleton = Skeleton::Create(humanRootNode);
+    Animation humanAnimation = LoadAnimationFile("Resources/human", "sneakWalk.gltf");
+
+    human_ = std::make_unique<SkinnedObject3d>();
+    human_->Initialize(skinCommon_.get());
+    human_->SetModel(modelHuman_.get());
+    human_->SetSkeleton(std::move(humanSkeleton));
+    human_->SetAnimation(std::move(humanAnimation));
+    human_->SetPosition(humanPosition_);
+    SkinnedObject3d::SetCommonCamera(camera_.get());
+
     // ----- エフェクト・進行管理 -----
     ParticleManager::GetInstance()->SetModel(modelBullet_.get());
 
@@ -137,6 +158,7 @@ void GamePlayScene::Update()
     // シャドウの更新
     shadowManager_->Update(objectCommon_->GetLightDirection());
     Object3d::SetLightViewProjection(shadowManager_->GetLightViewProjection());
+    SkinnedObject3d::SetLightViewProjection(shadowManager_->GetLightViewProjection());
 
     // 各オブジェクトの更新
     playerManager_->Update(cameraPosX);
@@ -194,6 +216,8 @@ void GamePlayScene::Update()
     for (auto& obj : gameObjects_) {
         obj->Update();
     }
+
+    human_->Update();
 
     // UIと描画関連の更新
     UpdateDebugUI();
@@ -299,6 +323,10 @@ void GamePlayScene::UpdateDebugUI()
     }
     if (ImGui::Selectable("AnimatedCube", editorSelectedType_ == SelectedType::AnimatedCube)) {
         editorSelectedType_ = SelectedType::AnimatedCube;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("Human", editorSelectedType_ == SelectedType::Human)) {
+        editorSelectedType_ = SelectedType::Human;
         editorSelectedIndex_ = -1;
     }
     if (ImGui::Selectable("HitStar Emitter", editorSelectedType_ == SelectedType::HitStar)) {
@@ -801,6 +829,47 @@ void GamePlayScene::UpdateDebugUI()
         break;
     }
 
+    case SelectedType::Human: {
+        ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1), "[Human]");
+        ImGui::Separator();
+
+        if (ImGui::DragFloat3("Position", &humanPosition_.x, 0.05f)) {
+            if (human_) { human_->SetPosition(humanPosition_); }
+        }
+        if (ImGui::DragFloat3("Rotation", &humanRotation_.x, 0.01f)) {
+            if (human_) { human_->SetRotation(humanRotation_); }
+        }
+        if (ImGui::DragFloat3("Scale", &humanScale_.x, 0.01f, 0.001f, 100.0f)) {
+            if (human_) { human_->SetScale(humanScale_); }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::SliderFloat("Anim Speed", &humanAnimSpeed_, 0.0f, 5.0f)) {
+            if (human_) { human_->SetAnimSpeed(humanAnimSpeed_); }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Reset")) {
+            humanPosition_  = { 5.0f, 0.0f, 0.0f };
+            humanRotation_  = { 0.0f, 0.0f, 0.0f };
+            humanScale_     = { 1.0f, 1.0f, 1.0f };
+            humanAnimSpeed_ = 1.0f;
+            if (human_) {
+                human_->SetPosition(humanPosition_);
+                human_->SetRotation(humanRotation_);
+                human_->SetScale(humanScale_);
+                human_->SetAnimSpeed(humanAnimSpeed_);
+            }
+        }
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show Skeleton", &showSkeletonDebug_);
+
+        break;
+    }
+
     default:
         ImGui::TextDisabled("(Nothing selected)");
         ImGui::TextDisabled("Hierarchy でオブジェクトを");
@@ -1287,6 +1356,25 @@ void GamePlayScene::Draw()
     }
 
     enemyManager_->DrawBullets();
+
+    // スキンメッシュ描画（PSO 切り替え後にライト・シャドウを再バインド）
+    skinCommon_->CommonDrawSettings();
+    objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
+    human_->Draw();
+
+    // スケルトンデバッグ描画（3Dワールド空間）
+#ifdef USE_IMGUI
+    if (showSkeletonDebug_ && human_) {
+        human_->DebugDraw();
+    }
+#endif
+
+    // PSO を通常に戻す
+    modelCommon_->CommonDrawSettings();
+    objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
+
     ParticleManager::GetInstance()->Draw(camera_.get());
     ring_->Draw();
     cylinder_->Draw();

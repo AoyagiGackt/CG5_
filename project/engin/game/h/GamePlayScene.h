@@ -40,6 +40,11 @@
 #include "HitStarEmitter.h"
 #include "Ring.h"
 #include "Cylinder.h"
+#include "SkinCommon.h"
+#include "SkinnedModel.h"
+#include "SkinnedObject3d.h"
+#include "Skeleton.h"
+#include "Animation.h"
 
 /**
  * @brief ゲームプレイ本編のシーンクラス
@@ -102,6 +107,11 @@ private:
 	// --- 天球 ---
 	std::unique_ptr<Skydome> skydome_;
 
+	// --- スキンメッシュ（human） ---
+	std::unique_ptr<SkinCommon>      skinCommon_;
+	std::unique_ptr<SkinnedModel>    modelHuman_;
+	std::unique_ptr<SkinnedObject3d> human_;
+
 	// --- ゲームオブジェクト群 ---
 	std::vector<std::unique_ptr<GameObject>> gameObjects_;
 	std::list<std::unique_ptr<Bullet>> bullets_;
@@ -146,6 +156,13 @@ private:
 	Vector3 animCubePosition_  = { 10.0f, 2.0f, 0.0f };
 	float   animCubeSpeed_     = 1.0f;
 
+	// --- Human パラメータ ---
+	Vector3 humanPosition_      = { 5.0f, 0.0f, 0.0f };
+	Vector3 humanRotation_      = { 0.0f, 0.0f, 0.0f };
+	Vector3 humanScale_         = { 1.0f, 1.0f, 1.0f };
+	float   humanAnimSpeed_     = 1.0f;
+	bool    showSkeletonDebug_  = false;
+
 	// --- Skydome パラメータ ---
 	Vector4 skyColor_       = { 1.0f, 1.0f, 1.0f, 1.0f };
 	float   skyRotOffsetY_  = 0.0f;
@@ -160,7 +177,7 @@ private:
 	std::string enemyObjPath_ = "Resources/boss/boss.obj";
 	std::string enemyTexPath_ = "Resources/boss/boss.png";
 
-	enum class SelectedType{ None,Player,Enemy,Camera,EnemySettings,UIElement,HitStar,Ring,Cylinder,Skydome,AnimatedCube };
+	enum class SelectedType{ None,Player,Enemy,Camera,EnemySettings,UIElement,HitStar,Ring,Cylinder,Skydome,AnimatedCube,Human };
 	SelectedType editorSelectedType_ = SelectedType::None;
 	int editorSelectedIndex_ = -1;
 

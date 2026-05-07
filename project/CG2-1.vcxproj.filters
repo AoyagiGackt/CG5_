@@ -213,6 +213,21 @@
     <ClCompile Include="engin\graphics\cpp\Ring.cpp">
       <Filter>ソースファイル\Game\Particle</Filter>
     </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\Skeleton.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\SkinCommon.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\SkinnedObject3d.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engin\graphics\h\D3DResourceLeakChecker.h">
@@ -416,6 +431,18 @@
     <ClInclude Include="engin\graphics\h\Ring.h">
       <Filter>ヘッダーファイル\Game\Particle</Filter>
     </ClInclude>
+    <ClInclude Include="engin\graphics\h\Skeleton.h">
+      <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
+    <ClInclude Include="engin\graphics\h\SkinnedModel.h">
+      <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
+    <ClInclude Include="engin\graphics\h\SkinCommon.h">
+      <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
+    <ClInclude Include="engin\graphics\h\SkinnedObject3d.h">
+      <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\object3d\Object3d.hlsli">
@@ -555,9 +582,6 @@
     <Filter Include="ソースファイル\Engine\ImGui">
       <UniqueIdentifier>{b6469eda-b052-417e-92f4-a176e5bcbf75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソースファイル\Engine\Media">
-      <UniqueIdentifier>{4b53e480-6d6b-48d6-ae15-3e1c89873094}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソースファイル\Engine\Animation">
       <UniqueIdentifier>{11223344-5566-7788-9900-aabbccddeeff}</UniqueIdentifier>
     </Filter>
@@ -605,6 +629,12 @@
     </Filter>
     <Filter Include="ヘッダーファイル\Game\Particle">
       <UniqueIdentifier>{47cbcefe-66ec-414a-adb3-9a82bd20bfc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソースファイル\Engine\Skeleton">
+      <UniqueIdentifier>{4b53e480-6d6b-48d6-ae15-3e1c89873094}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダーファイル\Engine\Skeleton">
+      <UniqueIdentifier>{47c68c08-6ded-4851-b605-c8f8a73b2e94}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -990,6 +1020,9 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="Resources\shaders\lighting\LightingMode.hlsli">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Resources\shaders\skinned\SkinnedVS.hlsl">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

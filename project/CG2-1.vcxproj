@@ -201,6 +201,11 @@
     <ClCompile Include="engin\base\main.cpp" />
     <ClCompile Include="engin\game\cpp\Input.cpp" />
     <ClCompile Include="engin\graphics\cpp\ImGuiManager.cpp" />
+    <ClCompile Include="engin\graphics\cpp\Skeleton.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkinCommon.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkinnedObject3d.cpp" />
     <ClCompile Include="engin\graphics\cpp\Skydome.cpp" />
     <ClCompile Include="engin\graphics\cpp\SpriteCommon.cpp" />
     <ClCompile Include="engin\graphics\cpp\Sprite.cpp" />
@@ -338,6 +343,10 @@
     <ClInclude Include="engin\graphics\h\MapChipField.h" />
     <ClInclude Include="engin\graphics\h\MaterialManager.h" />
     <ClInclude Include="engin\graphics\h\MeshManager.h" />
+    <ClInclude Include="engin\graphics\h\Skeleton.h" />
+    <ClInclude Include="engin\graphics\h\SkinnedModel.h" />
+    <ClInclude Include="engin\graphics\h\SkinCommon.h" />
+    <ClInclude Include="engin\graphics\h\SkinnedObject3d.h" />
     <ClInclude Include="engin\graphics\h\Skydome.h" />
     <ClInclude Include="engin\graphics\h\VideoPlayer.h" />
     <ClInclude Include="engin\math\h\MakeAffine.h" />
