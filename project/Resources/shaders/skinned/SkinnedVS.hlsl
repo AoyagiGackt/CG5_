@@ -25,11 +25,16 @@ struct VertexShaderInput
 
 VertexShaderOutput main(VertexShaderInput input)
 {
+    // ウェイト合計が 1.0 でない場合に縮小・拡大が起きないよう正規化する
+    float totalWeight = input.boneWeights.x + input.boneWeights.y +
+                        input.boneWeights.z + input.boneWeights.w;
+    float4 weights = (totalWeight > 0.0f) ? input.boneWeights / totalWeight : float4(1, 0, 0, 0);
+
     float4x4 skinMatrix =
-        input.boneWeights.x * gMatrixPalette[input.boneIndices.x] +
-        input.boneWeights.y * gMatrixPalette[input.boneIndices.y] +
-        input.boneWeights.z * gMatrixPalette[input.boneIndices.z] +
-        input.boneWeights.w * gMatrixPalette[input.boneIndices.w];
+        weights.x * gMatrixPalette[input.boneIndices.x] +
+        weights.y * gMatrixPalette[input.boneIndices.y] +
+        weights.z * gMatrixPalette[input.boneIndices.z] +
+        weights.w * gMatrixPalette[input.boneIndices.w];
 
     float4 skinnedPos    = mul(input.position, skinMatrix);
     float3 skinnedNormal = mul(input.normal, (float3x3)skinMatrix);

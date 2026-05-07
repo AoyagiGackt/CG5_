@@ -296,6 +296,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\skinned\SkinnedVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engin\game\h\AbstractSceneFactory.h" />

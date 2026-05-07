@@ -1,12 +1,14 @@
 #include "SkinnedObject3d.h"
 #include "Camera.h"
 #include "LightManager.h"
+#include "Logger.h"
 #include "Object3dCommon.h"
 #include "ShadowManager.h"
 #include "SrvManager.h"
 #include "TextureManager.h"
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 using namespace Microsoft::WRL;
 
@@ -94,10 +96,18 @@ void SkinnedObject3d::Update()
     // スキニングパレット = inverseBindMatrix * skeletonSpaceMatrix
     const auto& boneNames = model_->GetBoneNames();
     const auto& ibms      = model_->GetInverseBindMatrices();
+    static std::unordered_set<std::string> warnedBones;
     for (uint32_t i = 0; i < static_cast<uint32_t>(boneNames.size()) && i < kMaxJoints; ++i) {
         auto jt = skeleton_.jointMap.find(boneNames[i]);
         if (jt != skeleton_.jointMap.end()) {
             paletteData_[i] = Multiply(ibms[i], skeleton_.joints[jt->second].skeletonSpaceMatrix);
+        } else {
+            // ボーン名がスケルトンに存在しない場合、パレットは単位行列のまま（初期化済み）
+            if (warnedBones.insert(boneNames[i]).second) {
+                Logger::Log("[SkinnedObject3d] Bone '" + boneNames[i] +
+                            "' not found in skeleton. Palette index " +
+                            std::to_string(i) + " will remain identity.\n");
+            }
         }
     }
 

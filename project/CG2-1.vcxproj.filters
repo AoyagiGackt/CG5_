@@ -28,6 +28,9 @@
     <FxCompile Include="Resources\shaders\cylinder\Cylinder.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\skinned\SkinnedVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engin\base\main.cpp">
@@ -1023,9 +1026,6 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="Resources\shaders\lighting\LightingMode.hlsli">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="Resources\shaders\skinned\SkinnedVS.hlsl">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>
