@@ -216,6 +216,9 @@
     <ClCompile Include="engin\graphics\cpp\Skeleton.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
     </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp">
+      <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
     <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
     </ClCompile>

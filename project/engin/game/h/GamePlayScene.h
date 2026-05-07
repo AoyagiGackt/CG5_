@@ -157,10 +157,11 @@ private:
 	float   animCubeSpeed_     = 1.0f;
 
 	// --- Human パラメータ ---
-	Vector3 humanPosition_  = { 5.0f, 0.0f, 0.0f };
-	Vector3 humanRotation_  = { 0.0f, 0.0f, 0.0f };
-	Vector3 humanScale_     = { 1.0f, 1.0f, 1.0f };
-	float   humanAnimSpeed_ = 1.0f;
+	Vector3 humanPosition_      = { 5.0f, 0.0f, 0.0f };
+	Vector3 humanRotation_      = { 0.0f, 0.0f, 0.0f };
+	Vector3 humanScale_         = { 1.0f, 1.0f, 1.0f };
+	float   humanAnimSpeed_     = 1.0f;
+	bool    showSkeletonDebug_  = false;
 
 	// --- Skydome パラメータ ---
 	Vector4 skyColor_       = { 1.0f, 1.0f, 1.0f, 1.0f };

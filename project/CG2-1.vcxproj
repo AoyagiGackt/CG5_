@@ -202,6 +202,7 @@
     <ClCompile Include="engin\game\cpp\Input.cpp" />
     <ClCompile Include="engin\graphics\cpp\ImGuiManager.cpp" />
     <ClCompile Include="engin\graphics\cpp\Skeleton.cpp" />
+    <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinCommon.cpp" />
     <ClCompile Include="engin\graphics\cpp\SkinnedObject3d.cpp" />

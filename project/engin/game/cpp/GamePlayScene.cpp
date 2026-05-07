@@ -864,6 +864,9 @@ void GamePlayScene::UpdateDebugUI()
             }
         }
 
+        ImGui::Separator();
+        ImGui::Checkbox("Show Skeleton", &showSkeletonDebug_);
+
         break;
     }
 
@@ -1359,6 +1362,13 @@ void GamePlayScene::Draw()
     objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
     shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
     human_->Draw();
+
+    // スケルトンデバッグ描画（3Dワールド空間）
+#ifdef USE_IMGUI
+    if (showSkeletonDebug_ && human_) {
+        human_->DebugDraw();
+    }
+#endif
 
     // PSO を通常に戻す
     modelCommon_->CommonDrawSettings();

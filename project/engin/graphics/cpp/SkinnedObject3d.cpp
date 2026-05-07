@@ -52,6 +52,11 @@ void SkinnedObject3d::Initialize(SkinCommon* skinCommon)
     paletteCB_ = makeBuffer(sizeof(Matrix4x4) * kMaxJoints);
     paletteCB_->Map(0, nullptr, reinterpret_cast<void**>(&paletteData_));
     for (int i = 0; i < kMaxJoints; ++i) paletteData_[i] = MakeIdentity4x4();
+
+#ifdef USE_IMGUI
+    skeletonDebugRenderer_ = std::make_unique<SkeletonDebugRenderer>();
+    skeletonDebugRenderer_->Initialize(skinCommon_->GetDxCommon());
+#endif
 }
 
 void SkinnedObject3d::Update()
@@ -89,7 +94,8 @@ void SkinnedObject3d::Update()
     }
 
     // ワールド行列 / WVP を計算
-    Matrix4x4 world = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+    worldMatrix_ = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+    Matrix4x4 world = worldMatrix_;
     Matrix4x4 vp    = MakeIdentity4x4();
     if (commonCamera_) {
         vp = Multiply(commonCamera_->GetViewMatrix(), commonCamera_->GetProjectionMatrix());
@@ -100,6 +106,15 @@ void SkinnedObject3d::Update()
     transformData_->LightVP = commonLightVP_;
 
     materialData_->shadingType = LightManager::GetInstance()->GetLightingMode();
+}
+
+void SkinnedObject3d::DebugDraw()
+{
+#ifdef USE_IMGUI
+    if (skeletonDebugRenderer_) {
+        skeletonDebugRenderer_->Draw(skeleton_, worldMatrix_, commonCamera_);
+    }
+#endif
 }
 
 void SkinnedObject3d::Draw()

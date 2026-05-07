@@ -6,6 +6,11 @@
 #include "SkinCommon.h"
 #include <wrl/client.h>
 
+#ifdef USE_IMGUI
+#include "SkeletonDebugRenderer.h"
+#include <memory>
+#endif
+
 class Camera;
 
 // スキニング（ボーンアニメーション）付き 3D オブジェクト。
@@ -33,6 +38,7 @@ public:
 
     void Update();
     void Draw();
+    void DebugDraw();
 
 private:
     static const int kMaxJoints = 128;
@@ -68,6 +74,11 @@ private:
     float     animSpeed_ = 1.0f;
 
     Transform transform_{ {1,1,1}, {0,0,0}, {0,0,0} };
+    Matrix4x4 worldMatrix_ = MakeIdentity4x4();
+
+#ifdef USE_IMGUI
+    std::unique_ptr<SkeletonDebugRenderer> skeletonDebugRenderer_;
+#endif
 
     Microsoft::WRL::ComPtr<ID3D12Resource> transformCB_;
     TransformationMatrix* transformData_ = nullptr;
