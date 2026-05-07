@@ -344,6 +344,7 @@
     <ClInclude Include="engin\graphics\h\MaterialManager.h" />
     <ClInclude Include="engin\graphics\h\MeshManager.h" />
     <ClInclude Include="engin\graphics\h\Skeleton.h" />
+    <ClInclude Include="engin\graphics\h\SkeletonDebugRenderer.h" />
     <ClInclude Include="engin\graphics\h\SkinnedModel.h" />
     <ClInclude Include="engin\graphics\h\SkinCommon.h" />
     <ClInclude Include="engin\graphics\h\SkinnedObject3d.h" />

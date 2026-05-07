@@ -443,6 +443,9 @@
     <ClInclude Include="engin\graphics\h\SkinnedObject3d.h">
       <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
     </ClInclude>
+    <ClInclude Include="engin\graphics\h\SkeletonDebugRenderer.h">
+      <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\object3d\Object3d.hlsli">

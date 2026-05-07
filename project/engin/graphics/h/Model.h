@@ -59,10 +59,22 @@ public:
     D3D12_VERTEX_BUFFER_VIEW GetVertexBufferView() const { return vertexBufferView_; }
 
     /**
+     * @brief このモデルのインデックスバッファビューを取得する
+     * @return D3D12_INDEX_BUFFER_VIEW 描画に使用するインデックスバッファビュー
+     */
+    D3D12_INDEX_BUFFER_VIEW GetIndexBufferView() const { return indexBufferView_; }
+
+    /**
      * @brief モデルが持つ総頂点数を取得する
      * @return size_t 頂点の総数
      */
     size_t GetVertexCount() const { return vertices_.size(); }
+
+    /**
+     * @brief モデルが持つ総インデックス数を取得する
+     * @return size_t インデックスの総数
+     */
+    size_t GetIndexCount() const { return indices_.size(); }
 
     /**
      * @brief 環境マップ用キューブマップを設定する（事前にLoadTextureが呼ばれている必要あり）
@@ -89,15 +101,24 @@ private:
 
     /** @brief GPU側の頂点バッファリソース */
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
-    
+
     /** @brief 頂点バッファビュー（GPUに頂点データの位置とサイズを伝えるための構造体） */
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView_ {};
+
+    /** @brief GPU側のインデックスバッファリソース */
+    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+
+    /** @brief インデックスバッファビュー */
+    D3D12_INDEX_BUFFER_VIEW indexBufferView_ {};
 
     /** @brief 使用するテクスチャのファイルパス */
     std::string textureFilePath_;
 
     /** @brief CPU側で保持するモデルの全頂点データの配列 */
     std::vector<VertexData> vertices_;
+
+    /** @brief CPU側で保持するインデックスデータの配列 */
+    std::vector<uint32_t> indices_;
 
     /** @brief テクスチャがキューブマップかどうか（スロット選択に使用） */
     bool isCubemap_ = false;
