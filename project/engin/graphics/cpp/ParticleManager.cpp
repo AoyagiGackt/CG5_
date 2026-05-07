@@ -415,6 +415,9 @@ void ParticleManager::Draw(Camera* camera)
     D3D12_VERTEX_BUFFER_VIEW vbv = model_->GetVertexBufferView();
     commandList->IASetVertexBuffers(0, 1, &vbv);
 
+    D3D12_INDEX_BUFFER_VIEW ibv = model_->GetIndexBufferView();
+    commandList->IASetIndexBuffer(&ibv);
+
     // SrvManagerのヒープをセット
     SrvManager::GetInstance()->PreDraw();
 
@@ -429,7 +432,7 @@ void ParticleManager::Draw(Camera* camera)
 
         D3D12_GPU_DESCRIPTOR_HANDLE textureH = TextureManager::GetInstance()->GetSrvHandleGPU(group.textureFilePath);
         commandList->SetGraphicsRootDescriptorTable(4, textureH);
-        commandList->DrawInstanced((UINT)model_->GetVertexCount(), drawCount, 0, 0);
+        commandList->DrawIndexedInstanced((UINT)model_->GetIndexCount(), drawCount, 0, 0, 0);
     }
 }
 

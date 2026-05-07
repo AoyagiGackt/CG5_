@@ -41,7 +41,7 @@ public:
     void Initialize(ModelCommon* modelCommon, const std::string& modelFilePath, const std::string& textureFilePath);
     
     /**
-     * @brief モデルの描画コマンド（DrawInstanced）を積む
+     * @brief モデルの描画コマンド（DrawIndexedInstanced）を積む
      * @param modelCommon モデル描画の共通設定を持つオブジェクトのポインタ
      */
     void Draw(ModelCommon* modelCommon);
