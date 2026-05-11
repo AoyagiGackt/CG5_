@@ -59,8 +59,11 @@ float4x4 MakeRotateZ(float a)
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     uint idx = DTid.x;
+
     if (idx >= gMaxParticles)
+    {
         return;
+    }
 
     GPUParticleState p = gParticles[idx];
 
@@ -89,7 +92,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
     gParticles[idx] = p;
 
-    // ワールド行列: scale * rotateZ * billboard, その後 row3 に平行移動を直接書く
+    // ワールド行列: scale * rotateZ * billboard、row3 に平行移動を直接書く
     float4x4 world = mul(mul(MakeScale(p.scale), MakeRotateZ(p.rotateZ)), gBillboard);
     world._m30 = p.position.x;
     world._m31 = p.position.y;

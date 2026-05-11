@@ -36,10 +36,12 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon)
 void ParticleManager::Finalize()
 {
     particleGroups_.clear();
+
     if (csConstantsBuffer_) {
         csConstantsBuffer_->Unmap(0, nullptr);
         csConstantsData_ = nullptr;
     }
+
     csPipelineState_.Reset();
     csRootSignature_.Reset();
     graphicsPipelineState_.Reset();
@@ -62,8 +64,8 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
     TextureManager::GetInstance()->LoadTexture(textureFilePath);
 
     ID3D12Device* device = dxCommon_->GetDevice();
-    const UINT64 stateSize    = sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance;
-    const UINT64 instancSize  = sizeof(ParticleForGPU)   * ParticleGroup::kNumMaxInstance;
+    const UINT64 stateSize   = sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance;
+    const UINT64 instancSize = sizeof(ParticleForGPU)   * ParticleGroup::kNumMaxInstance;
 
     // ---- particleStateBuffer: DEFAULT heap, UAV ----
     {
@@ -98,7 +100,6 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
         assert(SUCCEEDED(hr));
         group.particleUploadBuffer->Map(0, nullptr,
             reinterpret_cast<void**>(&group.particleUploadData));
-        // 全スロットを「dead」で初期化
         memset(group.particleUploadData, 0, static_cast<size_t>(stateSize));
     }
 
@@ -133,8 +134,8 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
     device->CreateShaderResourceView(group.instancingResource.Get(), &srvDesc, cpuH);
 
     group.slotExpiry.fill(0.0f);
-    group.groupTime     = 0.0f;
-    group.needsInit     = true;
+    group.groupTime      = 0.0f;
+    group.needsInit      = true;
     group.instancingInSRV = false;
 }
 
@@ -149,6 +150,7 @@ uint32_t ParticleManager::AllocateSlot(ParticleGroup& group)
             return i;
         }
     }
+
     return UINT32_MAX;
 }
 
@@ -174,7 +176,10 @@ void ParticleManager::EmitWithColor(const std::string& name,
     ParticleGroup& group = particleGroups_[name];
 
     uint32_t slot = AllocateSlot(group);
-    if (slot == UINT32_MAX) return;
+
+    if (slot == UINT32_MAX) {
+        return;
+    }
 
     GPUParticleState& p = group.particleUploadData[slot];
     p.position    = position;
@@ -203,7 +208,10 @@ void ParticleManager::EmitEllipse(const std::string& name,
     ParticleGroup& group = particleGroups_[name];
 
     uint32_t slot = AllocateSlot(group);
-    if (slot == UINT32_MAX) return;
+
+    if (slot == UINT32_MAX) {
+        return;
+    }
 
     GPUParticleState& p = group.particleUploadData[slot];
     p.position    = position;
@@ -236,7 +244,10 @@ void ParticleManager::EmitSlash(const std::string& name,
 
     for (int i = 0; i < kCount; ++i) {
         uint32_t slot = AllocateSlot(group);
-        if (slot == UINT32_MAX) break;
+
+        if (slot == UINT32_MAX) {
+            break;
+        }
 
         float t = static_cast<float>(i) / static_cast<float>(kCount - 1);
         float a = angle - kSpread * 0.5f + kSpread * t;
@@ -280,7 +291,10 @@ void ParticleManager::EmitHitStar(const std::string& name,
 
     for (int i = 0; i < kCount; ++i) {
         uint32_t slot = AllocateSlot(group);
-        if (slot == UINT32_MAX) break;
+
+        if (slot == UINT32_MAX) {
+            break;
+        }
 
         float rotAngle = rotDist(engine);
         float velAngle = rotDist(engine);
@@ -315,8 +329,8 @@ void ParticleManager::Update(Camera* camera)
     const float dt = 1.0f / 60.0f;
 
     // ---- ビルボード行列とビュープロジェクション行列を計算 ----
-    Matrix4x4 billboard    = MakeIdentity4x4();
-    Matrix4x4 cameraView   = camera->GetViewMatrix();
+    Matrix4x4 billboard  = MakeIdentity4x4();
+    Matrix4x4 cameraView = camera->GetViewMatrix();
     billboard.m[0][0] = cameraView.m[0][0];
     billboard.m[0][1] = cameraView.m[1][0];
     billboard.m[0][2] = cameraView.m[2][0];
@@ -329,7 +343,6 @@ void ParticleManager::Update(Camera* camera)
 
     Matrix4x4 viewProj = Multiply(camera->GetViewMatrix(), camera->GetProjectionMatrix());
 
-    // CS 定数バッファを更新
     csConstantsData_->billboard    = billboard;
     csConstantsData_->viewProj     = viewProj;
     csConstantsData_->deltaTime    = dt;
@@ -354,7 +367,6 @@ void ParticleManager::Update(Camera* camera)
 
         // ---- 新パーティクルを GPU ステートバッファへコピー ----
         if (group.needsInit || !group.pendingSlots.empty()) {
-            // UAV → COPY_DEST
             D3D12_RESOURCE_BARRIER cb{};
             cb.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             cb.Transition.pResource   = group.particleStateBuffer.Get();
@@ -364,7 +376,6 @@ void ParticleManager::Update(Camera* camera)
             cmd->ResourceBarrier(1, &cb);
 
             if (group.needsInit) {
-                // 全スロットをゼロ（全 dead）で初期化
                 UINT64 fullSize = sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance;
                 cmd->CopyBufferRegion(
                     group.particleStateBuffer.Get(), 0,
@@ -373,7 +384,6 @@ void ParticleManager::Update(Camera* camera)
                 group.needsInit = false;
             }
 
-            // 新規発生スロットのみ上書き
             for (uint32_t slot : group.pendingSlots) {
                 UINT64 offset = static_cast<UINT64>(slot) * sizeof(GPUParticleState);
                 cmd->CopyBufferRegion(
@@ -381,9 +391,9 @@ void ParticleManager::Update(Camera* camera)
                     group.particleUploadBuffer.Get(), offset,
                     sizeof(GPUParticleState));
             }
+
             group.pendingSlots.clear();
 
-            // COPY_DEST → UAV
             cb.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
             cb.Transition.StateAfter  = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
             cmd->ResourceBarrier(1, &cb);
@@ -423,7 +433,10 @@ void ParticleManager::Update(Camera* camera)
 
 void ParticleManager::Draw(Camera* camera)
 {
-    if (!model_) return;
+    if (!model_) {
+        return;
+    }
+
     (void)camera;
 
     auto* cmd = dxCommon_->GetCommandList();
@@ -441,12 +454,18 @@ void ParticleManager::Draw(Camera* camera)
     SrvManager::GetInstance()->PreDraw();
 
     for (auto& [name, group] : particleGroups_) {
-        // 生存スロットが 1 つもなければスキップ
         bool hasAlive = false;
+
         for (uint32_t i = 0; i < ParticleGroup::kNumMaxInstance; ++i) {
-            if (group.groupTime < group.slotExpiry[i]) { hasAlive = true; break; }
+            if (group.groupTime < group.slotExpiry[i]) {
+                hasAlive = true;
+                break;
+            }
         }
-        if (!hasAlive) continue;
+
+        if (!hasAlive) {
+            continue;
+        }
 
         cmd->SetGraphicsRootDescriptorTable(
             2, SrvManager::GetInstance()->GetGPUDescriptorHandle(group.srvIndex));
@@ -455,7 +474,6 @@ void ParticleManager::Draw(Camera* camera)
             TextureManager::GetInstance()->GetSrvHandleGPU(group.textureFilePath);
         cmd->SetGraphicsRootDescriptorTable(4, texH);
 
-        // dead スロットは CS が alpha=0 にし、PS の discard で除外される
         cmd->DrawIndexedInstanced(
             static_cast<UINT>(model_->GetIndexCount()),
             ParticleGroup::kNumMaxInstance,
@@ -470,9 +488,12 @@ void ParticleManager::Draw(Camera* camera)
 void ParticleManager::SetTexture(const std::string& groupName,
                                  const std::string& textureFilePath)
 {
-    if (!particleGroups_.contains(groupName)) return;
-    ParticleGroup& group   = particleGroups_[groupName];
-    group.textureFilePath  = textureFilePath;
+    if (!particleGroups_.contains(groupName)) {
+        return;
+    }
+
+    ParticleGroup& group  = particleGroups_[groupName];
+    group.textureFilePath = textureFilePath;
     TextureManager::GetInstance()->LoadTexture(textureFilePath);
 }
 
@@ -555,9 +576,6 @@ void ParticleManager::CreateCSRootSignature()
 {
     ID3D12Device* device = dxCommon_->GetDevice();
 
-    // Slot 0 (b0): UpdateConstants CBV
-    // Slot 1 (u0): particleStateBuffer UAV (inline)
-    // Slot 2 (u1): instancingResource UAV (inline)
     D3D12_ROOT_PARAMETER params[3]{};
     params[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     params[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
@@ -628,7 +646,6 @@ void ParticleManager::CreatePipelineState()
     psoDesc.VS             = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
     psoDesc.PS             = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
 
-    // 加算ブレンド
     psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
     psoDesc.BlendState.RenderTarget[0].BlendEnable           = TRUE;
     psoDesc.BlendState.RenderTarget[0].SrcBlend              = D3D12_BLEND_SRC_ALPHA;
@@ -645,12 +662,12 @@ void ParticleManager::CreatePipelineState()
     psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
     psoDesc.DepthStencilState.DepthFunc      = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
-    psoDesc.DSVFormat              = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    psoDesc.NumRenderTargets       = 1;
-    psoDesc.RTVFormats[0]          = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    psoDesc.PrimitiveTopologyType  = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    psoDesc.SampleMask             = D3D12_DEFAULT_SAMPLE_MASK;
-    psoDesc.SampleDesc.Count       = 1;
+    psoDesc.DSVFormat             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    psoDesc.NumRenderTargets      = 1;
+    psoDesc.RTVFormats[0]         = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.SampleMask            = D3D12_DEFAULT_SAMPLE_MASK;
+    psoDesc.SampleDesc.Count      = 1;
 
     HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&graphicsPipelineState_));
     assert(SUCCEEDED(hr));
