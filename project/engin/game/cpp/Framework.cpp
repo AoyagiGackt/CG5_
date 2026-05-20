@@ -7,6 +7,7 @@
 #include "ModelManager.h"
 #include "ParticleManager.h"
 #include "GrayscaleEffect.h"
+#include "VignetteEffect.h"
 
 void Framework::Run()
 {
@@ -34,6 +35,7 @@ void Framework::Initialize()
 
     SrvManager::GetInstance()->Initialize(dxCommon_.get());
     GrayscaleEffect::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
+    VignetteEffect::GetInstance()->Initialize(dxCommon_.get());
     TextureManager::GetInstance()->Initialize(dxCommon_.get());
     ParticleManager::GetInstance()->Initialize(dxCommon_.get());
 
@@ -70,6 +72,7 @@ void Framework::Finalize()
     }
 
     // 各種マネージャーのGPUリソースを解放する
+    VignetteEffect::GetInstance()->Finalize();
     GrayscaleEffect::GetInstance()->Finalize();
     ParticleManager::GetInstance()->Finalize();
     MeshManager::GetInstance()->Finalize();

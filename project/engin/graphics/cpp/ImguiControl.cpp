@@ -5,6 +5,7 @@
 #include "MeshManager.h"
 #include "LightManager.h"
 #include "GrayscaleEffect.h"
+#include "VignetteEffect.h"
 
 void ShowControls()
 {
@@ -71,6 +72,32 @@ void ShowControls()
             float amount = gs->GetAmount();
             if (ImGui::SliderFloat("Amount", &amount, 0.0f, 1.0f)) {
                 gs->SetAmount(amount);
+            }
+        }
+
+        ImGui::Separator();
+
+        auto* vg = VignetteEffect::GetInstance();
+
+        bool vigEnabled = vg->IsEnabled();
+        if (ImGui::Checkbox("Vignette", &vigEnabled)) {
+            vg->SetEnabled(vigEnabled);
+        }
+
+        if (vigEnabled) {
+            float intensity = vg->GetIntensity();
+            if (ImGui::SliderFloat("Intensity", &intensity, 0.0f, 2.0f)) {
+                vg->SetIntensity(intensity);
+            }
+
+            float radius = vg->GetRadius();
+            if (ImGui::SliderFloat("Radius", &radius, 0.0f, 1.0f)) {
+                vg->SetRadius(radius);
+            }
+
+            float softness = vg->GetSoftness();
+            if (ImGui::SliderFloat("Softness", &softness, 0.0f, 1.0f)) {
+                vg->SetSoftness(softness);
             }
         }
     }
