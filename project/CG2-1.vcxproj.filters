@@ -52,6 +52,9 @@
     <FxCompile Include="Resources\shaders\skinned\SkinningCS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\postprocess\VignettePS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engin\base\main.cpp">
@@ -233,6 +236,9 @@
     </ClCompile>
     <ClCompile Include="engin\graphics\cpp\SkinCS.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\VignetteEffect.cpp">
+      <Filter>ソースファイル\Engine\Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -433,6 +439,9 @@
     </ClInclude>
     <ClInclude Include="engin\graphics\h\SkinCS.h">
       <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
+    </ClInclude>
+    <ClInclude Include="engin\graphics\h\VignetteEffect.h">
+      <Filter>ヘッダーファイル\Engine\Object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

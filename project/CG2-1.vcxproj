@@ -216,6 +216,7 @@
     <ClCompile Include="engin\graphics\cpp\Ring.cpp" />
     <ClCompile Include="engin\graphics\cpp\RenderTexture.cpp" />
     <ClCompile Include="engin\graphics\cpp\VideoPlayer.cpp" />
+    <ClCompile Include="engin\graphics\cpp\VignetteEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\object3d\Object3dPS.hlsl">
@@ -272,6 +273,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\shaders\cylinder\Cylinder.PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\postprocess\VignettePS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Pixel</ShaderType>
@@ -384,6 +393,7 @@
     <ClInclude Include="engin\graphics\h\SkinnedObject3d.h" />
     <ClInclude Include="engin\graphics\h\Skydome.h" />
     <ClInclude Include="engin\graphics\h\VideoPlayer.h" />
+    <ClInclude Include="engin\graphics\h\VignetteEffect.h" />
     <ClInclude Include="engin\math\h\MakeAffine.h" />
     <ClInclude Include="engin\graphics\h\ResourceObject.h" />
     <ClInclude Include="engin\game\h\Input.h" />

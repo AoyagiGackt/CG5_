@@ -5,6 +5,7 @@
 #include "TitleScene.h"
 #include <SrvManager.h>
 #include "GrayscaleEffect.h"
+#include "VignetteEffect.h"
 #include "ImguiControl.h"
 
 void MyGame::Initialize()
@@ -58,6 +59,8 @@ void MyGame::Draw()
         gs->EndScene();
         gs->Apply(SrvManager::GetInstance());
     }
+
+    VignetteEffect::GetInstance()->Apply();
 
     imguiManager_->Draw(dxCommon_.get());
 
