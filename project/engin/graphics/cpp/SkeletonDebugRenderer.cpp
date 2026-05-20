@@ -13,7 +13,7 @@ void SkeletonDebugRenderer::Initialize(DirectXCommon* dxCommon)
     dxCommon_ = dxCommon;
     ID3D12Device* device = dxCommon_->GetDevice();
 
-    // ---- Root Signature: 20 root constants (16=WVP + 4=color) ----
+    // ---- ルートシグネチャ: 32ビット定数 20個 (16=WVP + 4=カラー) ----
     D3D12_ROOT_PARAMETER rp{};
     rp.ParameterType             = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     rp.ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
@@ -31,17 +31,17 @@ void SkeletonDebugRenderer::Initialize(DirectXCommon* dxCommon)
     device->CreateRootSignature(0, sigBlob->GetBufferPointer(), sigBlob->GetBufferSize(),
         IID_PPV_ARGS(&rootSignature_));
 
-    // ---- Shaders ----
+    // ---- シェーダー ----
     IDxcBlob* vs = dxCommon_->CompileShader(L"Resources/shaders/debug/SkeletonDebugVS.hlsl", L"vs_6_0");
     IDxcBlob* ps = dxCommon_->CompileShader(L"Resources/shaders/debug/SkeletonDebugPS.hlsl", L"ps_6_0");
 
-    // ---- Input Layout ----
+    // ---- 入力レイアウト ----
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0,
           D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
 
-    // ---- Triangle PSO (ボーン・球ともに使用) ----
+    // ---- 三角形 PSO (ボーン・球ともに使用) ----
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
     psoDesc.pRootSignature                   = rootSignature_.Get();
     psoDesc.InputLayout                      = { inputLayout, 1 };
@@ -172,7 +172,7 @@ void SkeletonDebugRenderer::Draw(const Skeleton& skeleton, const Matrix4x4& worl
     ID3D12GraphicsCommandList* cmd = dxCommon_->GetCommandList();
     Matrix4x4 vp = Multiply(camera->GetViewMatrix(), camera->GetProjectionMatrix());
 
-    // joint local pos → world pos
+    // ジョイントのローカル座標 → ワールド座標
     auto toWorld = [&](const Matrix4x4& m) -> Vector3 {
         float lx = m.m[3][0], ly = m.m[3][1], lz = m.m[3][2];
         return {

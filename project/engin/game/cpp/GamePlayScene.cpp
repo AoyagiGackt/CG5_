@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #pragma comment(lib, "comdlg32.lib")
+#include "GrayscaleEffect.h"
 #include "ImguiManager.h"
 #include "ParticleManager.h"
 #include "SceneManager.h"
@@ -963,7 +964,10 @@ void GamePlayScene::DrawShadowPass()
 
     shadowManager_->EndShadowPass(commandList);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = dxCommon_->GetCurrentBackBufferHandle();
+    auto* gs = GrayscaleEffect::GetInstance();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = gs->IsEnabled()
+        ? gs->GetSceneRTVHandle()
+        : dxCommon_->GetCurrentBackBufferHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = dxCommon_->GetDsvHandle();
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
     D3D12_VIEWPORT vp = { 0, 0, 1280.0f, 720.0f, 0.0f, 1.0f };

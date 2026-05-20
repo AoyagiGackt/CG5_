@@ -58,11 +58,11 @@ void Cylinder::RebuildVertices()
         Vector3 nNext   = { -sNext, 0.0f, cNext };
 
         int idx = index * 6;
-        // Triangle 1: topCur, topNext, botCur
+        // 三角形1: topCur, topNext, botCur
         vertexData_[idx + 0] = { topCur,  { u,     0.0f }, nCur  };
         vertexData_[idx + 1] = { topNext, { uNext, 0.0f }, nNext };
         vertexData_[idx + 2] = { botCur,  { u,     1.0f }, nCur  };
-        // Triangle 2: botCur, topNext, botNext
+        // 三角形2: botCur, topNext, botNext
         vertexData_[idx + 3] = { botCur,  { u,     1.0f }, nCur  };
         vertexData_[idx + 4] = { topNext, { uNext, 0.0f }, nNext };
         vertexData_[idx + 5] = { botNext, { uNext, 1.0f }, nNext };
@@ -106,11 +106,11 @@ void Cylinder::CreatePipeline()
     texRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER rootParams[2] = {};
-    // [0] CBV b0 (WVP + color + alphaReference)
+    // [0] CBV b0 (WVP + カラー + アルファ参照値)
     rootParams[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParams[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
     rootParams[0].Descriptor.ShaderRegister = 0;
-    // [1] SRV t0 (texture)
+    // [1] SRV t0 (テクスチャ)
     rootParams[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParams[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParams[1].DescriptorTable.pDescriptorRanges   = texRange;

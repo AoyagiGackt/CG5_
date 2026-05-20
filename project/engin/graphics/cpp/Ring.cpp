@@ -106,11 +106,11 @@ void Ring::CreatePipeline()
     texRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER rootParams[2] = {};
-    // [0] CBV b0 (WVP + color)
+    // [0] CBV b0 (WVP + カラー)
     rootParams[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParams[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_ALL;
     rootParams[0].Descriptor.ShaderRegister = 0;
-    // [1] SRV t0 (texture)
+    // [1] SRV t0 (テクスチャ)
     rootParams[1].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParams[1].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParams[1].DescriptorTable.pDescriptorRanges   = texRange;

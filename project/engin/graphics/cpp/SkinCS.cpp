@@ -15,11 +15,11 @@ void SkinCS::Initialize(DirectXCommon* dxCommon,
     ID3D12Device* device = dxCommon->GetDevice();
 
     // =====================================================
-    // Compute Root Signature
-    //   Slot 0 (b1): 頂点数 (32bit root constant)
-    //   Slot 1 (t0): 入力頂点バッファ (SRV)
-    //   Slot 2 (b0): スキニングパレット (CBV)
-    //   Slot 3 (u0): 出力頂点バッファ (UAV)
+    // コンピュートルートシグネチャ
+    //   スロット 0 (b1): 頂点数 (32ビット定数)
+    //   スロット 1 (t0): 入力頂点バッファ (SRV)
+    //   スロット 2 (b0): スキニングパレット (CBV)
+    //   スロット 3 (u0): 出力頂点バッファ (UAV)
     // =====================================================
     D3D12_ROOT_PARAMETER params[4]{};
 
@@ -58,7 +58,7 @@ void SkinCS::Initialize(DirectXCommon* dxCommon,
         IID_PPV_ARGS(&csRootSig_));
 
     // =====================================================
-    // Compute PSO
+    // コンピュートPSO
     // =====================================================
     IDxcBlob* csBlob = dxCommon->CompileShader(
         L"Resources/shaders/skinned/SkinningCS.hlsl", L"cs_6_0");
@@ -112,13 +112,13 @@ void SkinCS::Dispatch(ID3D12GraphicsCommandList* cmd,
     cmd->SetComputeRootSignature(csRootSig_.Get());
     cmd->SetPipelineState(csPSO_.Get());
 
-    // Slot 0: 頂点数 (32bit root constant, b1)
+    // スロット 0: 頂点数 (32ビット定数, b1)
     cmd->SetComputeRoot32BitConstant(0, vertexCount_, 0);
-    // Slot 1: 入力頂点バッファ (SRV, t0)
+    // スロット 1: 入力頂点バッファ (SRV, t0)
     cmd->SetComputeRootShaderResourceView(1, inputGpuVA_);
-    // Slot 2: スキニングパレット (CBV, b0)
+    // スロット 2: スキニングパレット (CBV, b0)
     cmd->SetComputeRootConstantBufferView(2, paletteCBAddress);
-    // Slot 3: 出力頂点バッファ (UAV, u0)
+    // スロット 3: 出力頂点バッファ (UAV, u0)
     cmd->SetComputeRootUnorderedAccessView(3, outputBuffer_->GetGPUVirtualAddress());
 
     UINT threadGroups = (vertexCount_ + 63) / 64;

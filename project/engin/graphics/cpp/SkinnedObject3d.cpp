@@ -167,23 +167,23 @@ void SkinnedObject3d::Draw()
         // ModelCommon の標準 PSO (Object3dVS + Object3dPS) で描画する。
         commonModelCommon_->CommonDrawSettings();
 
-        // Slot 0 (b0): マテリアル
+        // スロット 0 (b0): マテリアル
         cmd->SetGraphicsRootConstantBufferView(0, materialCB_->GetGPUVirtualAddress());
-        // Slot 1 (b0 VS): 座標変換行列
+        // スロット 1 (b0 VS): 座標変換行列
         cmd->SetGraphicsRootConstantBufferView(1, transformCB_->GetGPUVirtualAddress());
-        // Slot 2 (t0): テクスチャ
+        // スロット 2 (t0): テクスチャ
         D3D12_GPU_DESCRIPTOR_HANDLE texHandle =
             TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTextureFilePath());
         cmd->SetGraphicsRootDescriptorTable(2, texHandle);
-        // Slot 3 (b1): ライト
+        // スロット 3 (b1): ライト
         if (commonObjectCommon_) {
             commonObjectCommon_->SetDefaultLight(cmd);
         }
-        // Slot 4 (t1): シャドウマップ
+        // スロット 4 (t1): シャドウマップ
         if (commonShadowManager_) {
             commonShadowManager_->SetShadowMap(cmd, SrvManager::GetInstance());
         }
-        // Slot 5 (t2): 環境マップ（未設定時は通常テクスチャをフォールバック）
+        // スロット 5 (t2): 環境マップ（未設定時は通常テクスチャをフォールバック）
         if (!envCubemapFilePath_.empty()) {
             D3D12_GPU_DESCRIPTOR_HANDLE cubeHandle =
                 TextureManager::GetInstance()->GetSrvHandleGPU(envCubemapFilePath_);

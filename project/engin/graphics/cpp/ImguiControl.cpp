@@ -10,6 +10,8 @@ void ShowControls()
 {
 #ifdef USE_IMGUI
 
+    ImGui::Begin("Controls");
+
     if (ImGui::CollapsingHeader("Mesh Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         const char* meshItems[] = { "Sphere", "Cube", "Plane" };
         int currentMesh = (int)MeshManager::GetInstance()->GetCurrentMeshType();
@@ -72,6 +74,8 @@ void ShowControls()
             }
         }
     }
+
+    ImGui::End();
 
 #endif
 }

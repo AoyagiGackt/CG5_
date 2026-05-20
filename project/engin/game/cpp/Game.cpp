@@ -5,6 +5,7 @@
 #include "TitleScene.h"
 #include <SrvManager.h>
 #include "GrayscaleEffect.h"
+#include "ImguiControl.h"
 
 void MyGame::Initialize()
 {
@@ -33,6 +34,8 @@ void MyGame::Update()
 
     // シーンマネージャー更新
     SceneManager::GetInstance()->Update();
+
+    ShowControls();
 
     // ImGui終了処理
     imguiManager_->End();

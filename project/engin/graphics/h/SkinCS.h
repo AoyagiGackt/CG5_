@@ -20,10 +20,10 @@ public:
     // 出力頂点レイアウト: ModelCommon の入力レイアウトと完全一致
     // POSITION (R32G32B32A32_FLOAT) + TEXCOORD (R32G32_FLOAT) + NORMAL (R32G32B32_FLOAT)
     struct OutputVertex {
-        float position[4]; // 16 bytes
-        float texcoord[2]; //  8 bytes
-        float normal[3];   // 12 bytes
-                           // total: 36 bytes
+        float position[4]; // 16 バイト
+        float texcoord[2]; //  8 バイト
+        float normal[3];   // 12 バイト
+                           // 合計: 36 バイト
     };
 
     // inputBuffer : SkinnedModel::GetVertexResource() を渡す (GENERIC_READ 状態)

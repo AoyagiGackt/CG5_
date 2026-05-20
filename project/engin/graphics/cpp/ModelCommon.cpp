@@ -15,11 +15,11 @@ void ModelCommon::Initialize(DirectXCommon* dxCommon)
 
     // =====================================================
     // 通常描画用 Root Signature
-    // Slot 0 (PS, b0) : Material
-    // Slot 1 (VS, b0) : TransformationMatrix
-    // Slot 2 (PS, t0) : Texture SRV
-    // Slot 3 (PS, b1) : DirectionalLight
-    // Slot 4 (PS, t1) : ShadowMap SRV
+    // スロット 0 (PS, b0) : マテリアル
+    // スロット 1 (VS, b0) : 変換行列
+    // スロット 2 (PS, t0) : テクスチャ SRV
+    // スロット 3 (PS, b1) : 平行光源
+    // スロット 4 (PS, t1) : シャドウマップ SRV
     // =====================================================
     D3D12_DESCRIPTOR_RANGE texRange[1] = {};
     texRange[0].BaseShaderRegister                = 0; // t0
@@ -40,24 +40,24 @@ void ModelCommon::Initialize(DirectXCommon* dxCommon)
     cubemapRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER rootParameters[6] = {};
-    // 0: Material (PS, b0)
+    // 0: マテリアル (PS, b0)
     rootParameters[0].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
-    // 1: TransformationMatrix (VS, b0)
+    // 1: 変換行列 (VS, b0)
     rootParameters[1].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[1].ShaderVisibility          = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParameters[1].Descriptor.ShaderRegister = 0;
-    // 2: Texture (PS, t0)
+    // 2: テクスチャ (PS, t0)
     rootParameters[2].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[2].DescriptorTable.pDescriptorRanges   = texRange;
     rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
-    // 3: DirectionalLight (PS, b1)
+    // 3: 平行光源 (PS, b1)
     rootParameters[3].ParameterType             = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[3].ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].Descriptor.ShaderRegister = 1;
-    // 4: ShadowMap (PS, t1)
+    // 4: シャドウマップ (PS, t1)
     rootParameters[4].ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[4].ShaderVisibility                    = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[4].DescriptorTable.pDescriptorRanges   = shadowRange;

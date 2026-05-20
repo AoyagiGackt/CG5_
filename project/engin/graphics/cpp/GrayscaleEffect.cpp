@@ -9,9 +9,9 @@ void GrayscaleEffect::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
     dxCommon_ = dxCommon;
     ID3D12Device* device = dxCommon->GetDevice();
 
-    // Typeless resource so we can share it as UNORM_SRGB RTV and UNORM_SRGB SRV.
-    // RTV format matches all existing scene PSOs (UNORM_SRGB).
-    // SRV format (UNORM_SRGB) makes the sampler decode SRGB → linear on read.
+    // TYPELESS リソースにすることで、同一バッファを UNORM_SRGB の RTV と SRV として共有できる。
+    // RTV フォーマットは既存のシーン PSO（UNORM_SRGB）と一致させる。
+    // SRV フォーマット（UNORM_SRGB）により、サンプラーが読み込み時に SRGB → リニアへデコードする。
     constexpr DXGI_FORMAT kResourceFmt = DXGI_FORMAT_R8G8B8A8_TYPELESS;
     constexpr DXGI_FORMAT kRtvFmt      = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     constexpr DXGI_FORMAT kSrvFmt      = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -139,7 +139,7 @@ void GrayscaleEffect::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
     psoDesc.NumRenderTargets      = 1;
     psoDesc.RTVFormats[0]         = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     psoDesc.SampleDesc.Count      = 1;
-    // No InputLayout: VS generates positions from SV_VertexID
+    // InputLayout なし: VS が SV_VertexID から頂点座標を生成する
 
     hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState_));
     assert(SUCCEEDED(hr));
@@ -172,7 +172,7 @@ void GrayscaleEffect::BeginScene()
     }
     isFirstFrame_ = false;
 
-    // Reuse the shared depth buffer so 3-D depth testing works correctly
+    // 共有の深度バッファを再利用することで、3D 深度テストが正しく機能する
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = dxCommon_->GetDsvHandle();
     cmdList->OMSetRenderTargets(1, &rtvHandle_, FALSE, &dsv);
 
@@ -201,7 +201,7 @@ void GrayscaleEffect::Apply(SrvManager* srvManager)
 {
     auto* cmdList = dxCommon_->GetCommandList();
 
-    // Restore backbuffer as the active render target (no depth needed for fullscreen quad)
+    // バックバッファをアクティブなレンダーターゲットとして復元する（フルスクリーン四角形に深度は不要）
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxCommon_->GetCurrentBackBufferHandle();
     cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
@@ -217,7 +217,7 @@ void GrayscaleEffect::Apply(SrvManager* srvManager)
     cmdList->SetGraphicsRootConstantBufferView(0, cbResource_->GetGPUVirtualAddress());
     cmdList->SetGraphicsRootDescriptorTable(1, srvManager->GetGPUDescriptorHandle(srvIndex_));
 
-    // Draw fullscreen triangle (no vertex buffer; VS uses SV_VertexID)
+    // フルスクリーン三角形を描画する（頂点バッファなし、VS が SV_VertexID を使用）
     cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
