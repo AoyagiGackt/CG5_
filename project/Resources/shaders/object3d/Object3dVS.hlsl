@@ -6,6 +6,7 @@ struct TransformationMatrix
     float4x4 World;
     float4x4 LightVP; // ライト空間のビュープロジェクション行列
 };
+
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
 
 struct VertexShaderInput

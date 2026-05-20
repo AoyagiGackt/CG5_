@@ -1,27 +1,28 @@
 #include "Object3d.hlsli"
 
-Texture2D<float4>   gTexture   : register(t0);
-Texture2D<float>    gShadowMap : register(t1); // シャドウマップ（深度テクスチャ）
-TextureCube<float4> gCubemap   : register(t2); // キューブマップ（天球用）
-SamplerState               gSampler       : register(s0);
-SamplerComparisonState     gShadowSampler : register(s1); // 比較サンプラー（PCF用）
+Texture2D<float4> gTexture : register(t0);
+Texture2D<float> gShadowMap : register(t1); // シャドウマップ（深度テクスチャ）
+TextureCube<float4> gCubemap : register(t2); // キューブマップ（天球用）
+SamplerState gSampler : register(s0);
+SamplerComparisonState gShadowSampler : register(s1); // 比較サンプラー（PCF用）
 
 // =====================================================
 // Material
 // =====================================================
 struct Material
 {
-    float4   color;
-    int      enableLighting;
-    int      shadingType;    // 0:Lambert  1:HalfLambert
-    int      useCubemap;     // 1:キューブマップサンプリング（天球用）
-    int      useTexture;     // 0:テクスチャ色なし（白=1,1,1,1 として扱う）
+    float4 color;
+    int enableLighting;
+    int shadingType; // 0:Lambert  1:HalfLambert
+    int useCubemap; // 1:キューブマップサンプリング（天球用）
+    int useTexture; // 0:テクスチャ色なし（白=1,1,1,1 として扱う）
     float4x4 uvTransform;
-    float3   specularColor;
-    float    shininess;
-    float3   cameraWorldPos;
-    float    envMapIntensity; // 環境マップ反射強度（0=なし, 1=フル反射）
+    float3 specularColor;
+    float shininess;
+    float3 cameraWorldPos;
+    float envMapIntensity; // 環境マップ反射強度（0=なし, 1=フル反射）
 };
+
 ConstantBuffer<Material> gMaterial : register(b0);
 
 // =====================================================
@@ -31,9 +32,9 @@ struct DirectionalLight
 {
     float4 color;
     float3 direction;
-    float  intensity;
+    float intensity;
     float3 ambientColor;
-    float  ambientIntensity;
+    float ambientIntensity;
 };
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
@@ -49,8 +50,8 @@ struct PixelShaderOutput
 // PCF シャドウ（3×3 カーネル）
 // 戻り値: 0.0=完全に影, 1.0=完全に照らされている
 // =====================================================
-static const float kShadowMapSize  = 2048.0f;
-static const float kShadowBias     = 0.002f;
+static const float kShadowMapSize = 2048.0f;
+static const float kShadowBias = 0.002f;
 
 float GetShadowFactor(float4 lightSpacePos)
 {
@@ -58,7 +59,7 @@ float GetShadowFactor(float4 lightSpacePos)
     float3 proj = lightSpacePos.xyz / lightSpacePos.w;
 
     // NDC → UV 変換（DirectX は Y 反転）
-    proj.x =  proj.x * 0.5f + 0.5f;
+    proj.x = proj.x * 0.5f + 0.5f;
     proj.y = -proj.y * 0.5f + 0.5f;
 
     // シャドウマップ範囲外なら照らされている
@@ -70,13 +71,15 @@ float GetShadowFactor(float4 lightSpacePos)
     }
 
     float compareDepth = proj.z - kShadowBias;
-    float texelSize    = 1.0f / kShadowMapSize;
+    float texelSize = 1.0f / kShadowMapSize;
 
     // PCF 3×3
     float shadow = 0.0f;
-    [unroll] for (int x = -1; x <= 1; x++)
+    [unroll]
+    for (int x = -1; x <= 1; x++)
     {
-        [unroll] for (int y = -1; y <= 1; y++)
+        [unroll]
+        for (int y = -1; y <= 1; y++)
         {
             shadow += gShadowMap.SampleCmpLevelZero(
                 gShadowSampler,
@@ -84,6 +87,7 @@ float GetShadowFactor(float4 lightSpacePos)
                 compareDepth);
         }
     }
+    
     return shadow / 9.0f;
 }
 
@@ -95,6 +99,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     PixelShaderOutput output;
 
     float4 textureColor;
+    
     if (gMaterial.useCubemap != 0)
     {
         // キューブマップ: カメラから頂点への方向ベクトルでサンプリング
@@ -113,6 +118,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         textureColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
     }
+    
     float4 baseColor = gMaterial.color * textureColor;
 
     if (gMaterial.enableLighting != 0)
@@ -132,14 +138,15 @@ PixelShaderOutput main(VertexShaderOutput input)
         {
             diffuse = NdotL * 0.5f + 0.5f;
         }
+        
         float3 diffuseColor =
             gMaterial.color.rgb * textureColor.rgb *
             gDirectionalLight.color.rgb * diffuse * gDirectionalLight.intensity;
 
         // ----- 鏡面反射（Specular / Blinn-Phong）-----
-        float3 H     = normalize(V + L);
-        float  NdotH = max(dot(N, H), 0.0f);
-        float  spec  = pow(NdotH, max(gMaterial.shininess, 1.0f)) * step(0.0f, NdotL);
+        float3 H = normalize(V + L);
+        float NdotH = max(dot(N, H), 0.0f);
+        float spec = pow(NdotH, max(gMaterial.shininess, 1.0f)) * step(0.0f, NdotL);
         float3 specularColor =
             gMaterial.specularColor *
             gDirectionalLight.color.rgb * spec * gDirectionalLight.intensity;
@@ -156,9 +163,10 @@ PixelShaderOutput main(VertexShaderOutput input)
         // envMapIntensity=0 → 通常 Blinn-Phong
         // envMapIntensity=1 → diffuse を env 反射で完全置換（金属）
         float3 litColor;
+        
         if (gMaterial.envMapIntensity > 0.0f)
         {
-            float3 R        = reflect(-V, N);
+            float3 R = reflect(-V, N);
             float3 envColor = gCubemap.Sample(gSampler, R).rgb;
             envColor = envColor / (envColor + 1.0f); // Reinhard トーンマッピング
 
@@ -167,7 +175,7 @@ PixelShaderOutput main(VertexShaderOutput input)
             float3 metalAmbient = gMaterial.color.rgb * gDirectionalLight.ambientColor * gDirectionalLight.ambientIntensity;
 
             float3 normalLit = (diffuseColor + specularColor) * shadowFactor + ambient;
-            float3 metalLit  = (metalDiffuse  + specularColor) * shadowFactor + metalAmbient;
+            float3 metalLit = (metalDiffuse + specularColor) * shadowFactor + metalAmbient;
 
             litColor = lerp(normalLit, metalLit, gMaterial.envMapIntensity);
         }
@@ -177,7 +185,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         }
 
         output.color.rgb = litColor;
-        output.color.a   = gMaterial.color.a * textureColor.a;
+        output.color.a = gMaterial.color.a * textureColor.a;
     }
     else
     {
