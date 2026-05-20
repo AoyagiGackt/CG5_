@@ -41,11 +41,12 @@ void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* aud
     Object3d::SetCommonCamera(camera_.get());
 
     // ----- キャラクター・オブジェクト -----
-    modelSkydome_ = std::make_unique<Model>();
-    modelSkydome_->Initialize(modelCommon_.get(), "Resources/SkyDome/SkyDome.obj", "Resources/rostock_laage_airport_4k.dds");
+    // Skydome: 一時的に画面から消すためコメントアウト
+    //modelSkydome_ = std::make_unique<Model>();
+    //modelSkydome_->Initialize(modelCommon_.get(), "Resources/SkyDome/SkyDome.obj", "Resources/rostock_laage_airport_4k.dds");
 
-    skydome_ = std::make_unique<Skydome>();
-    skydome_->Initialize(modelCommon_.get(), modelSkydome_.get());
+    //skydome_ = std::make_unique<Skydome>();
+    //skydome_->Initialize(modelCommon_.get(), modelSkydome_.get());
 
     auto hoge = std::make_unique<Hoge>();
     hoge->Initialize(modelCommon_.get(), dxCommon, input, audio);
@@ -130,7 +131,8 @@ void GamePlayScene::Update()
     float timeRatio = gameTime_.GetElapsedMinutes() / GameTime::kTotalGameMinutes;
 
     // 天球の更新
-    skydome_->Update(camera_.get(), timeRatio);
+    // Skydome を画面から消すため Update 呼び出しをコメントアウト
+    //if (skydome_) skydome_->Update(camera_.get(), timeRatio);
 
     // シャドウの更新
     shadowManager_->Update(objectCommon_->GetLightDirection());
@@ -424,19 +426,23 @@ void GamePlayScene::UpdateDebugUI()
         ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1), "[Skydome]");
         ImGui::Separator();
 
-        if (ImGui::ColorEdit4("Sky Color", &skyColor_.x)) {
-            skydome_->SetSkyColor(skyColor_);
-        }
+        if (skydome_) {
+            if (ImGui::ColorEdit4("Sky Color", &skyColor_.x)) {
+                skydome_->SetSkyColor(skyColor_);
+            }
 
-        ImGui::Separator();
+            ImGui::Separator();
 
-        if (ImGui::SliderFloat("Rotation Offset Y", &skyRotOffsetY_, -3.14159265f, 3.14159265f)) {
-            skydome_->SetRotationOffsetY(skyRotOffsetY_);
-        }
+            if (ImGui::SliderFloat("Rotation Offset Y", &skyRotOffsetY_, -3.14159265f, 3.14159265f)) {
+                skydome_->SetRotationOffsetY(skyRotOffsetY_);
+            }
 
-        if (ImGui::Button("Reset Offset")) {
-            skyRotOffsetY_ = 0.0f;
-            skydome_->SetRotationOffsetY(0.0f);
+            if (ImGui::Button("Reset Offset")) {
+                skyRotOffsetY_ = 0.0f;
+                skydome_->SetRotationOffsetY(0.0f);
+            }
+        } else {
+            ImGui::TextDisabled("Skydome is disabled (commented out in initialization).\nControls are inactive.");
         }
 
         break;
@@ -966,7 +972,8 @@ void GamePlayScene::Draw()
     shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
 
     // 天球（最初に描画して他のオブジェクトの背景とする）
-    skydome_->Draw();
+    // Skydome を画面から消すため Draw 呼び出しをコメントアウト
+    //if (skydome_) skydome_->Draw();
 
     for (auto& obj : gameObjects_) {
         obj->Draw();
