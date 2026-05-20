@@ -245,26 +245,32 @@ void GamePlayScene::UpdateDebugUI()
         editorSelectedType_ = SelectedType::Camera;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("Skydome", editorSelectedType_ == SelectedType::Skydome)) {
         editorSelectedType_ = SelectedType::Skydome;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("AnimatedCube", editorSelectedType_ == SelectedType::AnimatedCube)) {
         editorSelectedType_ = SelectedType::AnimatedCube;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("Human", editorSelectedType_ == SelectedType::Human)) {
         editorSelectedType_ = SelectedType::Human;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("Ring", editorSelectedType_ == SelectedType::Ring)) {
         editorSelectedType_ = SelectedType::Ring;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("Cylinder", editorSelectedType_ == SelectedType::Cylinder)) {
         editorSelectedType_ = SelectedType::Cylinder;
         editorSelectedIndex_ = -1;
     }
+
     if (ImGui::Selectable("White Particles", editorSelectedType_ == SelectedType::WhiteParticles)) {
         editorSelectedType_ = SelectedType::WhiteParticles;
         editorSelectedIndex_ = -1;
@@ -402,9 +408,11 @@ void GamePlayScene::UpdateDebugUI()
         if (ImGui::DragFloat3("Position", &cylinderPosition_.x, 0.1f)) {
             cylinder_->SetPosition(cylinderPosition_);
         }
+
         if (ImGui::DragFloat3("Rotation", &cylinderRotation_.x, 0.01f)) {
             cylinder_->SetRotation(cylinderRotation_);
         }
+
         if (ImGui::DragFloat("Scale", &cylinderScale_, 0.01f, 0.01f, 20.0f)) {
             cylinder_->SetScale(cylinderScale_);
         }
@@ -414,9 +422,11 @@ void GamePlayScene::UpdateDebugUI()
         if (ImGui::DragFloat("Top Radius", &cylinderTopRadius_, 0.05f, 0.01f, 50.0f)) {
             cylinder_->SetTopRadius(cylinderTopRadius_);
         }
+
         if (ImGui::DragFloat("Bottom Radius", &cylinderBottomRadius_, 0.05f, 0.01f, 50.0f)) {
             cylinder_->SetBottomRadius(cylinderBottomRadius_);
         }
+
         if (ImGui::DragFloat("Height", &cylinderHeight_, 0.05f, 0.01f, 50.0f)) {
             cylinder_->SetHeight(cylinderHeight_);
         }
@@ -426,6 +436,7 @@ void GamePlayScene::UpdateDebugUI()
         if (ImGui::ColorEdit4("Color", &cylinderColor_.x)) {
             cylinder_->SetColor(cylinderColor_);
         }
+
         if (ImGui::SliderFloat("Alpha Reference", &cylinderAlphaRef_, 0.0f, 1.0f)) {
             cylinder_->SetAlphaReference(cylinderAlphaRef_);
         }
@@ -579,9 +590,11 @@ void GamePlayScene::UpdateDebugUI()
         if (ImGui::DragFloat3("Position", &humanPosition_.x, 0.05f)) {
             if (human_) { human_->SetPosition(humanPosition_); }
         }
+
         if (ImGui::DragFloat3("Rotation", &humanRotation_.x, 0.01f)) {
             if (human_) { human_->SetRotation(humanRotation_); }
         }
+
         if (ImGui::DragFloat3("Scale", &humanScale_.x, 0.01f, 0.001f, 100.0f)) {
             if (human_) { human_->SetScale(humanScale_); }
         }
