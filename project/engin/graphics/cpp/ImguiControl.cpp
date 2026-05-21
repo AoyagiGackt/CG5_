@@ -83,7 +83,7 @@ void ShowControls()
         }
 
         if (filterEnabled) {
-            const char* modeItems[] = { "Box", "Linear (Gaussian)", "Prewitt エッジ", "深度アウトライン" };
+            const char* modeItems[] = { "Box", "Linear (Gaussian)", "Prewitt エッジ", "深度アウトライン", "ラジアルブラー" };
             int currentMode = (int)imgFilter->GetMode();
             if (ImGui::Combo("フィルターモード", &currentMode, modeItems, IM_ARRAYSIZE(modeItems))) {
                 imgFilter->SetMode((ImageFilter::Mode)currentMode);
@@ -185,6 +185,57 @@ void ShowControls()
                 if (ImGui::IsItemHovered()) {
                     ImGui::SetTooltip("深度差を増幅する倍率。\n大きいほど奥行き差のあるエッジが強調される。");
                 }
+            }
+        }
+
+        ImGui::End();
+    }
+
+    // ----- ラジアルブラー設定ウィンドウ -----
+    {
+        auto* imgFilter  = ImageFilter::GetInstance();
+        bool  isRadial   = (imgFilter->GetMode() == ImageFilter::Mode::RadialBlur);
+
+        ImGui::SetNextWindowSize(ImVec2(300, 0), ImGuiCond_Once);
+        ImGui::Begin("ラジアルブラー設定");
+
+        if (!imgFilter->IsEnabled() || !isRadial) {
+            ImGui::TextDisabled("イメージフィルターで\n「ラジアルブラー」を選択してください");
+        } else {
+            ImGui::TextDisabled("中心から放射状にブラーをかけます");
+            ImGui::Separator();
+
+            // 中心座標（UV空間）
+            float cx = imgFilter->GetRadialCenterX();
+            float cy = imgFilter->GetRadialCenterY();
+            if (ImGui::SliderFloat("中心 X", &cx, 0.0f, 1.0f, "%.2f")) {
+                imgFilter->SetRadialCenter(cx, cy);
+            }
+            if (ImGui::SliderFloat("中心 Y", &cy, 0.0f, 1.0f, "%.2f")) {
+                imgFilter->SetRadialCenter(cx, cy);
+            }
+            if (ImGui::Button("中心にリセット")) {
+                imgFilter->SetRadialCenter(0.5f, 0.5f);
+            }
+
+            ImGui::Separator();
+
+            float strength = imgFilter->GetRadialStrength();
+            if (ImGui::SliderFloat("強度", &strength, 0.0f, 1.0f, "%.3f")) {
+                imgFilter->SetRadialStrength(strength);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("ブラーの広がり具合。\n大きいほど中心から遠くまでサンプルが伸びる。");
+            }
+
+            int sampleCount = imgFilter->GetRadialSampleCount();
+            if (ImGui::SliderInt("サンプル数", &sampleCount, 2, 32)) {
+                imgFilter->SetRadialSampleCount(sampleCount);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("多いほど滑らかになるが処理負荷が上がる。");
             }
         }
 

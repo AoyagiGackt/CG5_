@@ -133,6 +133,16 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
     outlineCb_->outlineA    = 1.0f;
     outlineCb_->depthScale  = 100.0f;
 
+    // ラジアルブラー用定数バッファ（1 スロット × 256 バイト）
+    radialBlurCbResource_ = dxCommon->CreateBufferResource(256);
+    void* radialMapped = nullptr;
+    radialBlurCbResource_->Map(0, nullptr, &radialMapped);
+    radialBlurCb_ = reinterpret_cast<RadialBlurParams*>(radialMapped);
+    radialBlurCb_->centerX     = 0.5f;
+    radialBlurCb_->centerY     = 0.5f;
+    radialBlurCb_->strength    = 0.1f;
+    radialBlurCb_->sampleCount = 16;
+
     // ----- ブラー用 Root Signature（b0 + t0）-----
     D3D12_DESCRIPTOR_RANGE srvRange0 = {};
     srvRange0.RangeType                         = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -212,6 +222,7 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
     IDxcBlob* gaussianPsBlob   = dxCommon->CompileShader(L"Resources/shaders/postprocess/GaussianFilterPS.hlsl", L"ps_6_0");
     IDxcBlob* prewittPsBlob    = dxCommon->CompileShader(L"Resources/shaders/postprocess/PrewittEdgePS.hlsl",    L"ps_6_0");
     IDxcBlob* depthOlPsBlob    = dxCommon->CompileShader(L"Resources/shaders/postprocess/DepthOutlinePS.hlsl",   L"ps_6_0");
+    IDxcBlob* radialBlurPsBlob = dxCommon->CompileShader(L"Resources/shaders/postprocess/RadialBlurPS.hlsl",     L"ps_6_0");
 
     // ----- 共通 PSO ベース設定 -----
     D3D12_BLEND_DESC blendDesc = {};
@@ -255,6 +266,12 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
     hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&depthOutlinePso_));
     assert(SUCCEEDED(hr));
 
+    // ラジアルブラー用 PSO（rootSignature_ と同じ b0+t0）
+    psoDesc.pRootSignature = rootSignature_.Get();
+    psoDesc.PS = { radialBlurPsBlob->GetBufferPointer(), radialBlurPsBlob->GetBufferSize() };
+    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&radialBlurPso_));
+    assert(SUCCEEDED(hr));
+
     RebuildKernel();
 }
 
@@ -264,6 +281,12 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 
 void ImageFilter::Finalize()
 {
+    if (radialBlurCb_) {
+        radialBlurCbResource_->Unmap(0, nullptr);
+        radialBlurCb_ = nullptr;
+    }
+    radialBlurCbResource_.Reset();
+
     if (outlineCb_) {
         outlineCbResource_->Unmap(0, nullptr);
         outlineCb_ = nullptr;
@@ -276,6 +299,7 @@ void ImageFilter::Finalize()
     }
     cbResource_.Reset();
 
+    radialBlurPso_.Reset();
     depthOutlinePso_.Reset();
     outlineRootSignature_.Reset();
     prewittPso_.Reset();
@@ -370,6 +394,19 @@ void ImageFilter::Apply(SrvManager* srvManager)
         return;
     }
 
+    // ----- ラジアルブラー: シングルパス -----
+    if (mode_ == Mode::RadialBlur) {
+        cmd->SetGraphicsRootSignature(rootSignature_.Get());
+        cmd->SetPipelineState(radialBlurPso_.Get());
+        cmd->OMSetRenderTargets(1, &backRtv, FALSE, nullptr);
+        cmd->RSSetViewports(1, &vp);
+        cmd->RSSetScissorRects(1, &scissor);
+        cmd->SetGraphicsRootConstantBufferView(0, radialBlurCbResource_->GetGPUVirtualAddress());
+        cmd->SetGraphicsRootDescriptorTable(1, srvManager->GetGPUDescriptorHandle(sceneSrvIndex_));
+        cmd->DrawInstanced(3, 1, 0, 0);
+        return;
+    }
+
     // ----- Box / Gaussian: 水平→垂直の 2 パス -----
     cmd->SetGraphicsRootSignature(rootSignature_.Get());
     cmd->SetPipelineState(mode_ == Mode::Box ? boxPso_.Get() : gaussianPso_.Get());
@@ -409,7 +446,7 @@ void ImageFilter::Apply(SrvManager* srvManager)
 void ImageFilter::RebuildKernel()
 {
     if (!cbH_) return;
-    if (mode_ == Mode::PrewittEdge || mode_ == Mode::DepthOutline) return;
+    if (mode_ == Mode::PrewittEdge || mode_ == Mode::DepthOutline || mode_ == Mode::RadialBlur) return;
 
     int   r        = 1;
     float weights[17] = {};

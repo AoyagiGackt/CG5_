@@ -5,7 +5,7 @@
 
 class ImageFilter {
 public:
-    enum class Mode { Box, Gaussian, PrewittEdge, DepthOutline };
+    enum class Mode { Box, Gaussian, PrewittEdge, DepthOutline, RadialBlur };
 
     static ImageFilter* GetInstance()
     {
@@ -51,6 +51,18 @@ public:
     void  SetDepthScale(float s) { if (outlineCb_) outlineCb_->depthScale = s; }
     float GetDepthScale() const  { return outlineCb_ ? outlineCb_->depthScale : 100.0f; }
 
+    // ラジアルブラーパラメータ
+    void  SetRadialCenter(float x, float y) {
+        if (!radialBlurCb_) return;
+        radialBlurCb_->centerX = x; radialBlurCb_->centerY = y;
+    }
+    float GetRadialCenterX()    const { return radialBlurCb_ ? radialBlurCb_->centerX    : 0.5f; }
+    float GetRadialCenterY()    const { return radialBlurCb_ ? radialBlurCb_->centerY    : 0.5f; }
+    void  SetRadialStrength(float s)  { if (radialBlurCb_) radialBlurCb_->strength    = s; }
+    float GetRadialStrength()   const { return radialBlurCb_ ? radialBlurCb_->strength    : 0.1f; }
+    void  SetRadialSampleCount(int n) { if (radialBlurCb_) radialBlurCb_->sampleCount = n; }
+    int   GetRadialSampleCount() const { return radialBlurCb_ ? radialBlurCb_->sampleCount : 16; }
+
     D3D12_CPU_DESCRIPTOR_HANDLE GetSceneRTVHandle() const { return sceneRtvHandle_; }
 
 private:
@@ -71,6 +83,14 @@ private:
         float dirX;
         float dirY;
         float pad1[2];
+    };
+
+    // ラジアルブラー用 CBuffer（1スロット）
+    struct RadialBlurParams {
+        float centerX;     // 0  ブラー中心 X（UV空間）
+        float centerY;     // 4  ブラー中心 Y（UV空間）
+        float strength;    // 8  ブラー強度
+        int   sampleCount; // 12 サンプリング回数
     };
 
     // アウトライン用 CBuffer（1スロット）
@@ -103,11 +123,12 @@ private:
     uint32_t                                     intermediateSrvIndex_  = UINT32_MAX;
     bool                                         isIntermediateFirstFrame_ = true;
 
-    // ブラー用 PSO / Root Signature
+    // ブラー / アウトライン / ラジアルブラー 用 PSO / Root Signature
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> boxPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> gaussianPso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> prewittPso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> radialBlurPso_;
 
     // 深度アウトライン用 PSO / Root Signature（t0+t1の2テクスチャ）
     Microsoft::WRL::ComPtr<ID3D12RootSignature> outlineRootSignature_;
@@ -121,6 +142,10 @@ private:
     // アウトライン用定数バッファ（1スロット = 256 bytes）
     Microsoft::WRL::ComPtr<ID3D12Resource> outlineCbResource_;
     OutlineParams* outlineCb_ = nullptr;
+
+    // ラジアルブラー用定数バッファ（1スロット = 256 bytes）
+    Microsoft::WRL::ComPtr<ID3D12Resource> radialBlurCbResource_;
+    RadialBlurParams* radialBlurCb_ = nullptr;
 
     // 深度バッファ SRV
     uint32_t depthSrvIndex_ = UINT32_MAX;
