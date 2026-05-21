@@ -1135,9 +1135,6 @@
     <Filter Include="ソースファイル\Engine\ImGui">
       <UniqueIdentifier>{b6469eda-b052-417e-92f4-a176e5bcbf75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソースファイル\Engine\Media">
-      <UniqueIdentifier>{4b53e480-6d6b-48d6-ae15-3e1c89873094}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソースファイル\Engine\Animation">
       <UniqueIdentifier>{11223344-5566-7788-9900-aabbccddeeff}</UniqueIdentifier>
     </Filter>
