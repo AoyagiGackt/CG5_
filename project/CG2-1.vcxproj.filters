@@ -55,6 +55,9 @@
     <FxCompile Include="Resources\shaders\postprocess\VignettePS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\postprocess\KernelFilterPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engin\base\main.cpp">
@@ -239,6 +242,9 @@
     </ClCompile>
     <ClCompile Include="engin\graphics\cpp\VignetteEffect.cpp">
       <Filter>ソースファイル\Engine\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\ImageFilter.cpp">
+      <Filter>ソースファイル\Game\Particle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -442,6 +448,9 @@
     </ClInclude>
     <ClInclude Include="engin\graphics\h\VignetteEffect.h">
       <Filter>ヘッダーファイル\Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="engin\graphics\h\ImageFilter.h">
+      <Filter>ヘッダーファイル\Engine\Particle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

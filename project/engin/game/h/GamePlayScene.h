@@ -5,6 +5,7 @@
 #pragma once
 
  // --- 標準ライブラリ ---
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
@@ -38,6 +39,7 @@
 #include "SkinnedObject3d.h"
 #include "Skeleton.h"
 #include "Animation.h"
+#include "ImageFilter.h"
 #include "RenderTexture.h"
 
 /**
@@ -152,6 +154,13 @@ private:
 	// --- オフスクリーンレンダリング ---
 	std::unique_ptr<RenderTexture> renderTexture_;
 	std::unique_ptr<Sprite>        renderTextureSprite_;
+
+	// --- Camera Box Filter Smoothing ---
+	Vector3 cameraTargetPos_ = { 14.5f, 6.0f, -30.0f };
+	Vector3 cameraTargetRot_ = { 0.0f, 0.0f, 0.0f };
+	std::deque<Vector3> cameraPosHistory_;
+	std::deque<Vector3> cameraRotHistory_;
+	int cameraSmoothFrames_ = 1; // 1=即時, N=過去Nフレーム平均
 
 	// --- デバッグ・エディタ関連 ---
 	bool debugEditMode_ = false;

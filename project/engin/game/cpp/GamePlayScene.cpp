@@ -128,6 +128,9 @@ void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* aud
     LoadCameraParams();
     LoadModelPaths();
     LoadUILayout();
+
+    cameraTargetPos_ = camera_->GetTranslate();
+    cameraTargetRot_ = camera_->GetRotate();
 }
 
 /// <summary>
@@ -140,6 +143,23 @@ void GamePlayScene::Update()
     gameTime_.Update(1.0f);
 
     float timeRatio = gameTime_.GetElapsedMinutes() / GameTime::kTotalGameMinutes;
+
+    // Camera Box Filter Smoothing
+    {
+        cameraPosHistory_.push_back(cameraTargetPos_);
+        cameraRotHistory_.push_back(cameraTargetRot_);
+        while ((int)cameraPosHistory_.size() > cameraSmoothFrames_) {
+            cameraPosHistory_.pop_front();
+            cameraRotHistory_.pop_front();
+        }
+        Vector3 avgPos = { 0.0f, 0.0f, 0.0f };
+        Vector3 avgRot = { 0.0f, 0.0f, 0.0f };
+        for (const auto& p : cameraPosHistory_) { avgPos.x += p.x; avgPos.y += p.y; avgPos.z += p.z; }
+        for (const auto& r : cameraRotHistory_) { avgRot.x += r.x; avgRot.y += r.y; avgRot.z += r.z; }
+        float n = static_cast<float>(cameraPosHistory_.size());
+        camera_->SetTranslate({ avgPos.x / n, avgPos.y / n, avgPos.z / n });
+        camera_->SetRotate({ avgRot.x / n, avgRot.y / n, avgRot.z / n });
+    }
 
     // 天球の更新
     // Skydome を画面から消すため Update 呼び出しをコメントアウト
@@ -346,19 +366,17 @@ void GamePlayScene::UpdateDebugUI()
     case SelectedType::Camera: {
         ImGui::TextColored(ImVec4(1, 1, 0, 1), "[Camera]");
         ImGui::Separator();
-        Vector3 pos = camera_->GetTranslate();
-        if (ImGui::DragFloat3("Position", &pos.x, 0.1f)) {
-            camera_->SetTranslate(pos);
-        }
 
-        Vector3 rot = camera_->GetRotate();
-        
-        if (ImGui::DragFloat3("Rotation", &rot.x, 0.01f)) {
-            camera_->SetRotate(rot);
+        ImGui::DragFloat3("Position", &cameraTargetPos_.x, 0.1f);
+        ImGui::DragFloat3("Rotation", &cameraTargetRot_.x, 0.01f);
+
+        if (ImGui::SliderInt("Smooth Frames", &cameraSmoothFrames_, 1, 60)) {
+            cameraPosHistory_.clear();
+            cameraRotHistory_.clear();
         }
 
         ImGui::Separator();
-        
+
         if (ImGui::Button("Save##inspCam")) {
             SaveCameraParams();
         }
@@ -735,25 +753,24 @@ void GamePlayScene::UpdateDebugUI()
     // Camera Control（常時表示・画面上部中央）
     // =====================================================
     ImGui::SetNextWindowPos(ImVec2(400, 0), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(300, 130), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(300, 155), ImGuiCond_Once);
     ImGui::Begin("Camera Control");
 
-    Vector3 camPos = camera_->GetTranslate();
-    Vector3 camRot = camera_->GetRotate();
+    ImGui::DragFloat3("Pos", &cameraTargetPos_.x, 0.1f);
+    ImGui::DragFloat3("Rot", &cameraTargetRot_.x, 0.01f);
 
-    if (ImGui::DragFloat3("Pos", &camPos.x, 0.1f)) {
-        camera_->SetTranslate(camPos);
-    }
-
-    if (ImGui::DragFloat3("Rot", &camRot.x, 0.01f)) {
-        camera_->SetRotate(camRot);
+    if (ImGui::SliderInt("Smooth Frames", &cameraSmoothFrames_, 1, 60)) {
+        cameraPosHistory_.clear();
+        cameraRotHistory_.clear();
     }
 
     ImGui::Spacing();
-    
+
     if (ImGui::Button("Center")) {
-        camera_->SetTranslate({ 0.0f, 0.0f, 0.0f });
-        camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
+        cameraTargetPos_ = { 0.0f, 0.0f, 0.0f };
+        cameraTargetRot_ = { 0.0f, 0.0f, 0.0f };
+        cameraPosHistory_.clear();
+        cameraRotHistory_.clear();
     }
 
     ImGui::SameLine();
@@ -849,15 +866,14 @@ void GamePlayScene::SaveCameraParams()
         return;
     }
 
-    Vector3 cp = camera_->GetTranslate();
-    Vector3 cr = camera_->GetRotate();
     f << "{\n";
-    f << "  \"camera_pos_x\": " << cp.x << ",\n";
-    f << "  \"camera_pos_y\": " << cp.y << ",\n";
-    f << "  \"camera_pos_z\": " << cp.z << ",\n";
-    f << "  \"camera_rot_x\": " << cr.x << ",\n";
-    f << "  \"camera_rot_y\": " << cr.y << ",\n";
-    f << "  \"camera_rot_z\": " << cr.z << "\n";
+    f << "  \"camera_pos_x\": " << cameraTargetPos_.x << ",\n";
+    f << "  \"camera_pos_y\": " << cameraTargetPos_.y << ",\n";
+    f << "  \"camera_pos_z\": " << cameraTargetPos_.z << ",\n";
+    f << "  \"camera_rot_x\": " << cameraTargetRot_.x << ",\n";
+    f << "  \"camera_rot_y\": " << cameraTargetRot_.y << ",\n";
+    f << "  \"camera_rot_z\": " << cameraTargetRot_.z << ",\n";
+    f << "  \"camera_smooth_frames\": " << cameraSmoothFrames_ << "\n";
     f << "}\n";
 }
 
@@ -870,18 +886,21 @@ void GamePlayScene::LoadCameraParams()
     }
 
     std::string src((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    Vector3 cp = {
-        ReadJsonFloat(src, "camera_pos_x", camera_->GetTranslate().x),
-        ReadJsonFloat(src, "camera_pos_y", camera_->GetTranslate().y),
-        ReadJsonFloat(src, "camera_pos_z", camera_->GetTranslate().z)
+    cameraTargetPos_ = {
+        ReadJsonFloat(src, "camera_pos_x", cameraTargetPos_.x),
+        ReadJsonFloat(src, "camera_pos_y", cameraTargetPos_.y),
+        ReadJsonFloat(src, "camera_pos_z", cameraTargetPos_.z)
     };
-    Vector3 cr = {
-        ReadJsonFloat(src, "camera_rot_x", camera_->GetRotate().x),
-        ReadJsonFloat(src, "camera_rot_y", camera_->GetRotate().y),
-        ReadJsonFloat(src, "camera_rot_z", camera_->GetRotate().z)
+    cameraTargetRot_ = {
+        ReadJsonFloat(src, "camera_rot_x", cameraTargetRot_.x),
+        ReadJsonFloat(src, "camera_rot_y", cameraTargetRot_.y),
+        ReadJsonFloat(src, "camera_rot_z", cameraTargetRot_.z)
     };
-    camera_->SetTranslate(cp);
-    camera_->SetRotate(cr);
+    cameraSmoothFrames_ = ReadJsonInt(src, "camera_smooth_frames", cameraSmoothFrames_);
+    camera_->SetTranslate(cameraTargetPos_);
+    camera_->SetRotate(cameraTargetRot_);
+    cameraPosHistory_.clear();
+    cameraRotHistory_.clear();
 }
 
 // ---- モデルパス ----
@@ -977,10 +996,16 @@ void GamePlayScene::DrawShadowPass()
 
     shadowManager_->EndShadowPass(commandList);
 
-    auto* gs = GrayscaleEffect::GetInstance();
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = gs->IsEnabled()
-        ? gs->GetSceneRTVHandle()
-        : dxCommon_->GetCurrentBackBufferHandle();
+    auto* gs        = GrayscaleEffect::GetInstance();
+    auto* imgFilter = ImageFilter::GetInstance();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv;
+    if (imgFilter->IsEnabled()) {
+        rtv = imgFilter->GetSceneRTVHandle();
+    } else if (gs->IsEnabled()) {
+        rtv = gs->GetSceneRTVHandle();
+    } else {
+        rtv = dxCommon_->GetCurrentBackBufferHandle();
+    }
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = dxCommon_->GetDsvHandle();
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
     D3D12_VIEWPORT vp = { 0, 0, 1280.0f, 720.0f, 0.0f, 1.0f };
