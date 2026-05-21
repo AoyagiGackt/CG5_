@@ -84,7 +84,7 @@ void ShowControls()
         }
 
         if (filterEnabled) {
-            const char* modeItems[] = { "Box", "Linear (Gaussian)", "Prewitt エッジ", "深度アウトライン", "ラジアルブラー", "ディゾルブ" };
+            const char* modeItems[] = { "Box", "Linear (Gaussian)", "Prewitt エッジ", "深度アウトライン", "ラジアルブラー", "ディゾルブ", "GPU ノイズ" };
             int currentMode = (int)imgFilter->GetMode();
             if (ImGui::Combo("フィルターモード", &currentMode, modeItems, IM_ARRAYSIZE(modeItems))) {
                 imgFilter->SetMode((ImageFilter::Mode)currentMode);
@@ -284,6 +284,117 @@ void ShowControls()
             imgFilter->GetDissolveEdgeColor(edgeCol);
             if (ImGui::ColorEdit4("エッジ色", edgeCol)) {
                 imgFilter->SetDissolveEdgeColor(edgeCol[0], edgeCol[1], edgeCol[2], edgeCol[3]);
+            }
+        }
+
+        ImGui::End();
+    }
+
+    // ----- GPU ノイズ設定ウィンドウ -----
+    {
+        auto* imgFilter = ImageFilter::GetInstance();
+        bool  isNoise   = (imgFilter->GetMode() == ImageFilter::Mode::NoiseGen);
+
+        ImGui::SetNextWindowSize(ImVec2(320, 0), ImGuiCond_Once);
+        ImGui::Begin("GPU ノイズ設定");
+
+        if (!imgFilter->IsEnabled() || !isNoise) {
+            ImGui::TextDisabled("イメージフィルターで\n「GPU ノイズ」を選択してください");
+        } else {
+            // アニメーション
+            ImGui::TextDisabled("--- アニメーション ---");
+            bool anim = imgFilter->GetNoiseAnimate();
+            if (ImGui::Checkbox("自動更新（毎フレーム seed を変化）", &anim)) {
+                imgFilter->SetNoiseAnimate(anim);
+            }
+            if (anim) {
+                float speed = imgFilter->GetNoiseSpeed();
+                if (ImGui::SliderFloat("速度", &speed, 0.0005f, 0.05f, "%.4f")) {
+                    imgFilter->SetNoiseSpeed(speed);
+                }
+            }
+            if (ImGui::Button("リセット")) {
+                imgFilter->ResetNoiseTime();
+            }
+
+            ImGui::Separator();
+
+            // 透過合成
+            float opacity = imgFilter->GetNoiseOpacity();
+            if (ImGui::SliderFloat("不透明度", &opacity, 0.0f, 1.0f, "%.2f")) {
+                imgFilter->SetNoiseOpacity(opacity);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("0=シーンのみ / 1=ノイズのみ\n中間値でシーンが透けて見えます");
+            }
+
+            ImGui::Separator();
+
+            // スケール
+            ImGui::TextDisabled("--- スケール ---");
+            float sx = imgFilter->GetNoiseScaleX();
+            float sy = imgFilter->GetNoiseScaleY();
+            if (ImGui::DragFloat("スケール X", &sx, 0.05f, 0.1f, 50.0f, "%.2f")) {
+                imgFilter->SetNoiseScale(sx, sy);
+            }
+            if (ImGui::DragFloat("スケール Y", &sy, 0.05f, 0.1f, 50.0f, "%.2f")) {
+                imgFilter->SetNoiseScale(sx, sy);
+            }
+            if (ImGui::Button("均一にする")) {
+                imgFilter->SetNoiseScale(sx, sx);
+            }
+
+            ImGui::Separator();
+
+            // シード（アニメーション OFF 時に手動調整）
+            float seed = imgFilter->GetNoiseSeed();
+            if (ImGui::DragFloat("シード（手動）", &seed, 0.01f, -100.0f, 100.0f, "%.3f")) {
+                imgFilter->SetNoiseSeed(seed);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("アニメーション OFF 時にパターンを手動で変えられます");
+            }
+
+            ImGui::Separator();
+
+            // fBm パラメータ
+            ImGui::TextDisabled("--- fBm（フラクタル重ね合わせ）---");
+            int octaves = imgFilter->GetNoiseOctaves();
+            if (ImGui::SliderInt("オクターブ数", &octaves, 1, 8)) {
+                imgFilter->SetNoiseOctaves(octaves);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("重ね合わせ回数。多いほど細かいディテールが加わる。");
+            }
+
+            float persistence = imgFilter->GetNoisePersistence();
+            if (ImGui::SliderFloat("パーシステンス", &persistence, 0.1f, 1.0f, "%.2f")) {
+                imgFilter->SetNoisePersistence(persistence);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("オクターブごとの振幅減衰率。\n低いほど細かいディテールが弱くなる。");
+            }
+
+            float lacunarity = imgFilter->GetNoiseLacunarity();
+            if (ImGui::SliderFloat("ラクナリティ", &lacunarity, 1.0f, 4.0f, "%.2f")) {
+                imgFilter->SetNoiseLacunarity(lacunarity);
+            }
+            ImGui::SameLine(); ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("オクターブごとの周波数倍率。\n大きいほど細部が急激に細かくなる。");
+            }
+
+            ImGui::Separator();
+
+            // カラーモード
+            const char* colorItems[] = { "グレースケール", "カラー" };
+            int colorMode = imgFilter->GetNoiseColorMode();
+            if (ImGui::Combo("カラーモード", &colorMode, colorItems, IM_ARRAYSIZE(colorItems))) {
+                imgFilter->SetNoiseColorMode(colorMode);
             }
         }
 

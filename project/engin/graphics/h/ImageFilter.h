@@ -5,7 +5,7 @@
 
 class ImageFilter {
 public:
-    enum class Mode { Box, Gaussian, PrewittEdge, DepthOutline, RadialBlur, Dissolve };
+    enum class Mode { Box, Gaussian, PrewittEdge, DepthOutline, RadialBlur, Dissolve, NoiseGen };
 
     static ImageFilter* GetInstance()
     {
@@ -81,6 +81,29 @@ public:
     void  SetDissolveMaskIndex(int i) { dissolveMaskIndex_ = (i == 0) ? 0 : 1; }
     int   GetDissolveMaskIndex() const { return dissolveMaskIndex_; }
 
+    // プロシージャルノイズパラメータ
+    void  SetNoiseScale(float x, float y) { if (!noiseGenCb_) return; noiseGenCb_->scaleX = x; noiseGenCb_->scaleY = y; }
+    float GetNoiseScaleX()       const { return noiseGenCb_ ? noiseGenCb_->scaleX      : 4.0f; }
+    float GetNoiseScaleY()       const { return noiseGenCb_ ? noiseGenCb_->scaleY      : 4.0f; }
+    // seed は CPU 側の manualSeed を見せる（アニメーション時も表示値は変わらない）
+    void  SetNoiseSeed(float s)        { noiseManualSeed_ = s; }
+    float GetNoiseSeed()         const { return noiseManualSeed_; }
+    void  SetNoiseOctaves(int n)       { if (noiseGenCb_) noiseGenCb_->octaves     = n; }
+    int   GetNoiseOctaves()      const { return noiseGenCb_ ? noiseGenCb_->octaves     : 4; }
+    void  SetNoisePersistence(float p) { if (noiseGenCb_) noiseGenCb_->persistence = p; }
+    float GetNoisePersistence()  const { return noiseGenCb_ ? noiseGenCb_->persistence : 0.5f; }
+    void  SetNoiseLacunarity(float l)  { if (noiseGenCb_) noiseGenCb_->lacunarity  = l; }
+    float GetNoiseLacunarity()   const { return noiseGenCb_ ? noiseGenCb_->lacunarity  : 2.0f; }
+    void  SetNoiseColorMode(int m)     { if (noiseGenCb_) noiseGenCb_->colorMode   = m; }
+    int   GetNoiseColorMode()    const { return noiseGenCb_ ? noiseGenCb_->colorMode   : 0; }
+    void  SetNoiseOpacity(float o)     { if (noiseGenCb_) noiseGenCb_->opacity     = o; }
+    float GetNoiseOpacity()      const { return noiseGenCb_ ? noiseGenCb_->opacity     : 1.0f; }
+    void  SetNoiseAnimate(bool v)      { animateNoise_ = v; }
+    bool  GetNoiseAnimate()      const { return animateNoise_; }
+    void  SetNoiseSpeed(float s)       { noiseSpeed_ = s; }
+    float GetNoiseSpeed()        const { return noiseSpeed_; }
+    void  ResetNoiseTime()             { noiseTime_ = 0.0f; }
+
     D3D12_CPU_DESCRIPTOR_HANDLE GetSceneRTVHandle() const { return sceneRtvHandle_; }
 
 private:
@@ -120,6 +143,18 @@ private:
         float edgeG;     // 20
         float edgeB;     // 24
         float edgeA;     // 28
+    };
+
+    // プロシージャルノイズ用 CBuffer（1スロット）
+    struct NoiseGenParams {
+        float scaleX;      // 0  UV スケール X
+        float scaleY;      // 4  UV スケール Y
+        float seed;        // 8  シード（CPU が毎フレーム上書き）
+        int   octaves;     // 12 オクターブ数
+        float persistence; // 16 振幅減衰率
+        float lacunarity;  // 20 周波数倍率
+        int   colorMode;   // 24 0=グレー, 1=カラー
+        float opacity;     // 28 ノイズ不透明度（0=シーンのみ, 1=ノイズのみ）
     };
 
     // アウトライン用 CBuffer（1スロット）
@@ -163,6 +198,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> outlineRootSignature_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> depthOutlinePso_;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> dissolvePso_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> noiseGenPso_;
 
     // ブラー用定数バッファ（H/V 2スロット = 512 bytes）
     Microsoft::WRL::ComPtr<ID3D12Resource> cbResource_;
@@ -181,6 +217,10 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> dissolveCbResource_;
     DissolveParams* dissolveCb_ = nullptr;
 
+    // プロシージャルノイズ用定数バッファ（1スロット = 256 bytes）
+    Microsoft::WRL::ComPtr<ID3D12Resource> noiseGenCbResource_;
+    NoiseGenParams* noiseGenCb_ = nullptr;
+
     // 深度バッファ SRV
     uint32_t depthSrvIndex_ = UINT32_MAX;
 
@@ -192,4 +232,10 @@ private:
     int   boxRadius_     = 2;
     float gaussianSigma_ = 1.5f;
     bool  enabled_       = false;
+
+    // ノイズアニメーション（CPU 側のみ、GPU には seed として書き込む）
+    float noiseManualSeed_ = 0.0f;
+    float noiseTime_       = 0.0f;
+    float noiseSpeed_      = 0.005f;
+    bool  animateNoise_    = false;
 };
