@@ -5,6 +5,7 @@
 #include "TitleScene.h"
 #include <SrvManager.h>
 #include "GrayscaleEffect.h"
+#include "ImageFilter.h"
 #include "VignetteEffect.h"
 #include "ImguiControl.h"
 
@@ -47,15 +48,23 @@ void MyGame::Draw()
     dxCommon_->PreDraw();
     SrvManager::GetInstance()->PreDraw();
 
-    auto* gs = GrayscaleEffect::GetInstance();
-    if (gs->IsEnabled()) {
+    auto* gs        = GrayscaleEffect::GetInstance();
+    auto* imgFilter = ImageFilter::GetInstance();
+
+    // ImageFilter が有効なときはシーンをその RTV へ、次点で GrayscaleEffect
+    if (imgFilter->IsEnabled()) {
+        imgFilter->BeginScene();
+    } else if (gs->IsEnabled()) {
         gs->BeginScene();
     }
 
     // 現在のシーンの描画
     SceneManager::GetInstance()->Draw();
 
-    if (gs->IsEnabled()) {
+    if (imgFilter->IsEnabled()) {
+        imgFilter->EndScene();
+        imgFilter->Apply(SrvManager::GetInstance());
+    } else if (gs->IsEnabled()) {
         gs->EndScene();
         gs->Apply(SrvManager::GetInstance());
     }

@@ -5,6 +5,7 @@
 #include "MeshManager.h"
 #include "LightManager.h"
 #include "GrayscaleEffect.h"
+#include "ImageFilter.h"
 #include "VignetteEffect.h"
 
 void ShowControls()
@@ -72,6 +73,40 @@ void ShowControls()
             float amount = gs->GetAmount();
             if (ImGui::SliderFloat("Amount", &amount, 0.0f, 1.0f)) {
                 gs->SetAmount(amount);
+            }
+        }
+
+        ImGui::Separator();
+
+        // ----- Image Filter (Box / Linear) -----
+        auto* imgFilter = ImageFilter::GetInstance();
+
+        bool filterEnabled = imgFilter->IsEnabled();
+        if (ImGui::Checkbox("Image Filter", &filterEnabled)) {
+            imgFilter->SetEnabled(filterEnabled);
+        }
+
+        if (filterEnabled) {
+            const char* modeItems[] = { "Box", "Linear (Gaussian)" };
+            int currentMode = (int)imgFilter->GetMode();
+            if (ImGui::Combo("Filter Mode", &currentMode, modeItems, IM_ARRAYSIZE(modeItems))) {
+                imgFilter->SetMode((ImageFilter::Mode)currentMode);
+            }
+
+            if (imgFilter->GetMode() == ImageFilter::Mode::Box) {
+                int r = imgFilter->GetRadius();
+                if (ImGui::SliderInt("Radius", &r, 0, 8)) {
+                    imgFilter->SetRadius(r);
+                }
+                ImGui::TextDisabled("taps: %d x %d", 2*r+1, 2*r+1);
+            } else {
+                float sigma = imgFilter->GetSigma();
+                if (ImGui::SliderFloat("Sigma", &sigma, 0.5f, 8.0f, "%.2f")) {
+                    imgFilter->SetSigma(sigma);
+                }
+                int r = (int)(sigma * 3.0f);
+                if (r > 8) r = 8;
+                ImGui::TextDisabled("radius: %d, taps: %d x %d", r, 2*r+1, 2*r+1);
             }
         }
 

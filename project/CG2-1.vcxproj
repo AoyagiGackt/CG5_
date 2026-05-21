@@ -185,6 +185,7 @@
     <ClCompile Include="engin\game\cpp\StringUtlity.cpp" />
     <ClCompile Include="engin\graphics\cpp\Fade.cpp" />
     <ClCompile Include="engin\graphics\cpp\GrayscaleEffect.cpp" />
+    <ClCompile Include="engin\graphics\cpp\ImageFilter.cpp" />
     <ClCompile Include="engin\graphics\cpp\ImguiControl.cpp" />
     <ClCompile Include="engin\graphics\cpp\LightManager.cpp" />
     <ClCompile Include="engin\graphics\cpp\MapChipField.cpp" />
@@ -347,6 +348,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\postprocess\KernelFilterPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engin\game\h\AbstractSceneFactory.h" />
@@ -414,6 +423,7 @@
     <ClInclude Include="engin\graphics\h\Cylinder.h" />
     <ClInclude Include="engin\graphics\h\Ring.h" />
     <ClInclude Include="engin\graphics\h\GrayscaleEffect.h" />
+    <ClInclude Include="engin\graphics\h\ImageFilter.h" />
     <ClInclude Include="engin\graphics\h\RenderTexture.h" />
     <ClInclude Include="engin\graphics\h\ImguiControl.h" />
   </ItemGroup>
