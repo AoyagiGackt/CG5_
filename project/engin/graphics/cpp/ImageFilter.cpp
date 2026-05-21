@@ -158,6 +158,20 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 
     // ノイズマスクは Apply() の初回 Dissolve 呼び出し時に遅延ロードする
 
+    // プロシージャルノイズ用定数バッファ（1 スロット × 256 バイト）
+    noiseGenCbResource_ = dxCommon->CreateBufferResource(256);
+    void* noiseGenMapped = nullptr;
+    noiseGenCbResource_->Map(0, nullptr, &noiseGenMapped);
+    noiseGenCb_ = reinterpret_cast<NoiseGenParams*>(noiseGenMapped);
+    noiseGenCb_->scaleX      = 4.0f;
+    noiseGenCb_->scaleY      = 4.0f;
+    noiseGenCb_->seed        = 0.0f;
+    noiseGenCb_->octaves     = 4;
+    noiseGenCb_->persistence = 0.5f;
+    noiseGenCb_->lacunarity  = 2.0f;
+    noiseGenCb_->colorMode   = 0;
+    noiseGenCb_->opacity     = 1.0f;
+
     // ----- ブラー用 Root Signature（b0 + t0）-----
     D3D12_DESCRIPTOR_RANGE srvRange0 = {};
     srvRange0.RangeType                         = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -239,6 +253,7 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
     IDxcBlob* depthOlPsBlob    = dxCommon->CompileShader(L"Resources/shaders/postprocess/DepthOutlinePS.hlsl",   L"ps_6_0");
     IDxcBlob* radialBlurPsBlob = dxCommon->CompileShader(L"Resources/shaders/postprocess/RadialBlurPS.hlsl",     L"ps_6_0");
     IDxcBlob* dissolvePsBlob   = dxCommon->CompileShader(L"Resources/shaders/postprocess/DissolvePS.hlsl",       L"ps_6_0");
+    IDxcBlob* noiseGenPsBlob   = dxCommon->CompileShader(L"Resources/shaders/postprocess/NoisePS.hlsl",          L"ps_6_0");
 
     // ----- 共通 PSO ベース設定 -----
     D3D12_BLEND_DESC blendDesc = {};
@@ -294,6 +309,12 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
     hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&dissolvePso_));
     assert(SUCCEEDED(hr));
 
+    // プロシージャルノイズ用 PSO（rootSignature_: b0+t0）
+    psoDesc.pRootSignature = rootSignature_.Get();
+    psoDesc.PS = { noiseGenPsBlob->GetBufferPointer(), noiseGenPsBlob->GetBufferSize() };
+    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&noiseGenPso_));
+    assert(SUCCEEDED(hr));
+
     RebuildKernel();
 }
 
@@ -303,6 +324,13 @@ void ImageFilter::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 
 void ImageFilter::Finalize()
 {
+    if (noiseGenCb_) {
+        noiseGenCbResource_->Unmap(0, nullptr);
+        noiseGenCb_ = nullptr;
+    }
+    noiseGenCbResource_.Reset();
+    noiseGenPso_.Reset();
+
     if (dissolveCb_) {
         dissolveCbResource_->Unmap(0, nullptr);
         dissolveCb_ = nullptr;
@@ -459,6 +487,26 @@ void ImageFilter::Apply(SrvManager* srvManager)
         return;
     }
 
+    // ----- プロシージャルノイズ: シングルパス（シーンに重ね合わせ）-----
+    if (mode_ == Mode::NoiseGen) {
+        // アニメーション: 毎フレーム seed を加算して乱数パターンを変化させる
+        if (animateNoise_) {
+            noiseTime_ += noiseSpeed_;
+            noiseGenCb_->seed = noiseManualSeed_ + noiseTime_;
+        } else {
+            noiseGenCb_->seed = noiseManualSeed_;
+        }
+        cmd->SetGraphicsRootSignature(rootSignature_.Get());
+        cmd->SetPipelineState(noiseGenPso_.Get());
+        cmd->OMSetRenderTargets(1, &backRtv, FALSE, nullptr);
+        cmd->RSSetViewports(1, &vp);
+        cmd->RSSetScissorRects(1, &scissor);
+        cmd->SetGraphicsRootConstantBufferView(0, noiseGenCbResource_->GetGPUVirtualAddress());
+        cmd->SetGraphicsRootDescriptorTable(1, srvManager->GetGPUDescriptorHandle(sceneSrvIndex_));
+        cmd->DrawInstanced(3, 1, 0, 0);
+        return;
+    }
+
     // ----- Box / Gaussian: 水平→垂直の 2 パス -----
     cmd->SetGraphicsRootSignature(rootSignature_.Get());
     cmd->SetPipelineState(mode_ == Mode::Box ? boxPso_.Get() : gaussianPso_.Get());
@@ -499,7 +547,8 @@ void ImageFilter::RebuildKernel()
 {
     if (!cbH_) return;
     if (mode_ == Mode::PrewittEdge || mode_ == Mode::DepthOutline ||
-        mode_ == Mode::RadialBlur  || mode_ == Mode::Dissolve) return;
+        mode_ == Mode::RadialBlur  || mode_ == Mode::Dissolve    ||
+        mode_ == Mode::NoiseGen) return;
 
     int   r        = 1;
     float weights[17] = {};

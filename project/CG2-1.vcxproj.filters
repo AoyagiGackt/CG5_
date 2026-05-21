@@ -73,6 +73,9 @@
     <FxCompile Include="Resources\shaders\postprocess\DissolvePS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\postprocess\NoisePS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engin\base\main.cpp">
