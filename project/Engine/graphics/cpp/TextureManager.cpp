@@ -139,12 +139,13 @@ void TextureManager::LoadTexture(const std::string& filePath)
     UpdateSubresources(uploadCmdList.Get(), resource.Get(), uploadBuffer.Get(),
         0, 0, subresourceCount, subresources.data());
 
-    // バリア: COPY_DEST → PIXEL_SHADER_RESOURCE
+    // バリア: COPY_DEST → PIXEL_SHADER_RESOURCE（全サブリソース＝全ミップレベルを一括遷移）
     D3D12_RESOURCE_BARRIER barrier {};
-    barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.pResource   = resource.Get();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    barrier.Type                        = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource        = resource.Get();
+    barrier.Transition.Subresource      = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore      = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter       = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
     uploadCmdList->ResourceBarrier(1, &barrier);
 
     // コマンドリストを閉じてキューに投入

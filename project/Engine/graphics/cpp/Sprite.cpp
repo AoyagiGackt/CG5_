@@ -65,7 +65,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
     // WVP作成
     transformationMatrixResource_ = spriteCommon_->GetDxCommon()->CreateBufferResource(sizeof(TransformationMatrixSprite));
     transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
-    *transformationMatrixData_ = { MakeIdentity4x4(), MakeIdentity4x4() };
+    *transformationMatrixData_ = { MakeIdentity4x4(), MakeIdentity4x4(), MakeIdentity4x4(), MakeIdentity4x4() };
 }
 
 void Sprite::SetTexture(std::string textureFilePath) {
