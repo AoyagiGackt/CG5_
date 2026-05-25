@@ -52,7 +52,7 @@ void ShowControls()
 
     // ライティング切り替え
     if (ImGui::CollapsingHeader("ライティング設定", ImGuiTreeNodeFlags_DefaultOpen)) {
-        const char* lightItems[] = { "なし", "Lambert", "Half Lambert" };
+        const char* lightItems[] = { "なし", "Lambert", "Half Lambert", "Lambert+Phong", "HalfLambert+Phong" };
         int currentMode = LightManager::GetInstance()->GetLightingMode();
         if (ImGui::Combo("ライティングモード", &currentMode, lightItems, IM_ARRAYSIZE(lightItems))) {
             LightManager::GetInstance()->SetLightingMode(currentMode);

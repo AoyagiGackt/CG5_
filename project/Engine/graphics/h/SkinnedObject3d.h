@@ -55,6 +55,7 @@ private:
     struct TransformationMatrix {
         Matrix4x4 WVP;
         Matrix4x4 World;
+        Matrix4x4 WorldInverseTranspose; ///< World の逆転置行列（非均一スケール対応法線変換用）
         Matrix4x4 LightVP;
     };
 

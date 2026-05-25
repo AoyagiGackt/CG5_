@@ -40,7 +40,7 @@ void Object3d::Initialize(ModelCommon* modelCommon)
     device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&transformationMatrixResource_));
     transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
-    *transformationMatrixData_ = { MakeIdentity4x4(), MakeIdentity4x4(), MakeIdentity4x4() };
+    *transformationMatrixData_ = { MakeIdentity4x4(), MakeIdentity4x4(), MakeIdentity4x4(), MakeIdentity4x4() };
 
     // Material用リソース作成
     resDesc.Width = sizeof(Material);
@@ -83,9 +83,10 @@ void Object3d::Update()
     Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 
     // 定数バッファへ転送
-    transformationMatrixData_->WVP     = worldViewProjectionMatrix;
-    transformationMatrixData_->World   = worldMatrix;
-    transformationMatrixData_->LightVP = commonLightVP_;
+    transformationMatrixData_->WVP                  = worldViewProjectionMatrix;
+    transformationMatrixData_->World                = worldMatrix;
+    transformationMatrixData_->WorldInverseTranspose = Transpose(Inverse(worldMatrix));
+    transformationMatrixData_->LightVP              = commonLightVP_;
 
     // 毎フレームライティングモードをマテリアルに反映させる
     materialData_->shadingType = LightManager::GetInstance()->GetLightingMode();

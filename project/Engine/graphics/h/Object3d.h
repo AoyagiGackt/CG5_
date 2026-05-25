@@ -169,9 +169,10 @@ private:
      * @brief GPUに送るための座標変換行列データ
      */
     struct TransformationMatrix {
-        Matrix4x4 WVP;     ///< ワールド・ビュー・プロジェクション行列
-        Matrix4x4 World;   ///< ワールド行列（法線やライティング計算用）
-        Matrix4x4 LightVP; ///< ライト空間のビュープロジェクション行列（シャドウ用）
+        Matrix4x4 WVP;                  ///< ワールド・ビュー・プロジェクション行列
+        Matrix4x4 World;                ///< ワールド行列
+        Matrix4x4 WorldInverseTranspose; ///< World の逆転置行列（非均一スケール対応法線変換用）
+        Matrix4x4 LightVP;              ///< ライト空間のビュープロジェクション行列（シャドウ用）
     };
 
     /**

@@ -21,5 +21,11 @@ enum LightingMode {
     /** * @brief ハーフランバート（Half-Lambert）
      * @note 影の範囲を 0.5~1.0 に補正する方式。影が真っ暗にならず、柔らかい印象になります
      */
-    Lighting_HalfLambert = 2
+    Lighting_HalfLambert = 2,
+
+    /** @brief Lambert 拡散 + Phong 鏡面反射 */
+    Lighting_Lambert_Phong = 3,
+
+    /** @brief HalfLambert 拡散 + Phong 鏡面反射 */
+    Lighting_HalfLambert_Phong = 4
 };

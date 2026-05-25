@@ -1,7 +1,8 @@
-#include "DirectXCommon.h"
+﻿#include "DirectXCommon.h"
+#include "GameConstants.h"
 #include "Input.h"
 #include "Logger.h"
-#include "StringUtlity.h"
+#include "StringUtility.h"
 #include "WinApp.h"
 #include <format>
 #include <string>
@@ -105,8 +106,8 @@ void DirectXCommon::PreDraw()
     commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle);
 
     // 画面クリア
-    float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; // 青っぽい色
-    commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+    static constexpr float kClearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+    commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], kClearColor, 0, nullptr);
 
     // 深度クリア
     commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -415,10 +416,9 @@ void DirectXCommon::InitializeFixFPS()
 void DirectXCommon::UpdateFixFPS()
 {
 
-    // 60フレームぴったり
-    const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
-    // 60フレームよりわずかに短い時間
-    const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+    static constexpr float kFpsMargin = 65.0f; // 60fps未達のチェック閾値
+    const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / GameConstants::kTargetFps));
+    const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / kFpsMargin));
     // 現在時間を取得
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     // 前回記録からの経過時間を取得する

@@ -36,7 +36,7 @@ public:
     DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
 private:
-    DirectXCommon* dxCommon_;
+    DirectXCommon* dxCommon_ = nullptr;
 
     // ----- 通常描画用 -----
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;

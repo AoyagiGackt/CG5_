@@ -138,9 +138,10 @@ void SkinnedObject3d::Update()
         vp = Multiply(commonCamera_->GetViewMatrix(), commonCamera_->GetProjectionMatrix());
         materialData_->cameraWorldPos = commonCamera_->GetTranslate();
     }
-    transformData_->WVP     = Multiply(world, vp);
-    transformData_->World   = world;
-    transformData_->LightVP = commonLightVP_;
+    transformData_->WVP                  = Multiply(world, vp);
+    transformData_->World                = world;
+    transformData_->WorldInverseTranspose = Transpose(Inverse(world));
+    transformData_->LightVP              = commonLightVP_;
 
     materialData_->shadingType = LightManager::GetInstance()->GetLightingMode();
 }

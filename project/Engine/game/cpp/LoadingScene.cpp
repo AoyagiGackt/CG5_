@@ -1,4 +1,5 @@
 #include "LoadingScene.h"
+#include "GameConstants.h"
 #include "SceneManager.h"
 
 void LoadingScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* audio) {
@@ -36,7 +37,7 @@ void LoadingScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* audi
 }
 
 void LoadingScene::Update() {
-    const float dt = 1.0f / 60.0f;
+    constexpr float dt = GameConstants::kFrameDeltaTime;
     timer_    += dt;
     dotTimer_ += dt;
 

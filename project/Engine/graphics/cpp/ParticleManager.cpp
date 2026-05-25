@@ -1,4 +1,5 @@
 #include "ParticleManager.h"
+#include "GameConstants.h"
 #include "TextureManager.h"
 #include <cassert>
 #include <cmath>
@@ -165,7 +166,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
 
 uint32_t ParticleManager::AllocateSlot(ParticleGroup& group)
 {
-    if (group.freeList.empty()) return UINT32_MAX;
+    if (group.freeList.empty()) { return UINT32_MAX; }
     uint32_t slot = group.freeList.back();
     group.freeList.pop_back();
     return slot;
@@ -270,7 +271,7 @@ void ParticleManager::EmitSlash(const std::string& name,
         float t = static_cast<float>(i) / static_cast<float>(kCount - 1);
         float a = angle - kSpread * 0.5f + kSpread * t;
 
-        float speed = kSpeed * (0.7f + 0.3f * t) * (1.0f / 60.0f);
+        float speed = kSpeed * (0.7f + 0.3f * t) * GameConstants::kFrameDeltaTime;
         Vector3 vel = { std::cos(a) * speed, std::sin(a) * speed, 0.0f };
 
         float bright = 1.0f - t * 0.3f;
@@ -413,7 +414,7 @@ void ParticleManager::EmitHitStar(const std::string& name,
         float rotAngle = rotDist(engine);
         float velAngle = rotDist(engine);
         float scaleY   = scaleYDist(engine);
-        float speed    = speedDist(engine) * (1.0f / 60.0f);
+        float speed    = speedDist(engine) * GameConstants::kFrameDeltaTime;
         float lifeTime = lifeDist(engine);
 
         Vector3 vel = { std::cos(velAngle) * speed, std::sin(velAngle) * speed, 0.0f };
@@ -440,7 +441,7 @@ void ParticleManager::EmitHitStar(const std::string& name,
 
 void ParticleManager::Update(Camera* camera)
 {
-    const float dt = 1.0f / 60.0f;
+    constexpr float dt = GameConstants::kFrameDeltaTime;
 
     // ---- ビルボード行列とビュープロジェクション行列を計算 ----
     Matrix4x4 billboard  = MakeIdentity4x4();
@@ -726,10 +727,10 @@ void ParticleManager::SetAdditiveBlend(const std::string& name, bool additive)
 bool ParticleManager::IsGroupAlive(const std::string& name) const
 {
     auto it = particleGroups_.find(name);
-    if (it == particleGroups_.end()) return false;
+    if (it == particleGroups_.end()) { return false; }
     const ParticleGroup& group = it->second;
     for (uint32_t i = 0; i < ParticleGroup::kNumMaxInstance; ++i) {
-        if (group.groupTime < group.slotExpiry[i]) return true;
+        if (group.groupTime < group.slotExpiry[i]) { return true; }
     }
     return false;
 }

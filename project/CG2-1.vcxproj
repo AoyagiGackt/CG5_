@@ -170,7 +170,8 @@
     <ClCompile Include="Engine\game\cpp\Game.cpp" />
     <ClCompile Include="Engine\game\cpp\GameObject.cpp" />
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp" />
-    <ClCompile Include="Engine\game\cpp\hoge.cpp" />
+    <ClCompile Include="Engine\game\cpp\JsonHelper.cpp" />
+    <ClCompile Include="Engine\game\cpp\SceneEditor.cpp" />
     <ClCompile Include="Engine\game\cpp\LightingMode.cpp" />
     <ClCompile Include="Engine\game\cpp\SceneFactory.cpp" />
     <ClCompile Include="Engine\game\cpp\SceneManager.cpp" />
@@ -183,7 +184,7 @@
     <ClCompile Include="Engine\game\cpp\DirectXCommon.cpp" />
     <ClCompile Include="Engine\game\cpp\Logger.cpp" />
     <ClCompile Include="Engine\game\cpp\WinApp.cpp" />
-    <ClCompile Include="Engine\game\cpp\StringUtlity.cpp" />
+    <ClCompile Include="Engine\game\cpp\StringUtility.cpp" />
     <ClCompile Include="Engine\graphics\cpp\Fade.cpp" />
     <ClCompile Include="Engine\graphics\cpp\GrayscaleEffect.cpp" />
     <ClCompile Include="Engine\graphics\cpp\HsvFilter.cpp" />
@@ -429,11 +430,13 @@
     <ClInclude Include="Engine\game\h\Framework.h" />
     <ClInclude Include="Engine\game\h\Game.h" />
     <ClInclude Include="Engine\game\h\GameObject.h" />
+    <ClInclude Include="Engine\game\h\GameConstants.h" />
     <ClInclude Include="Engine\game\h\GamePlayScene.h" />
     <ClInclude Include="Engine\game\h\GameTime.h" />
+    <ClInclude Include="Engine\game\h\JsonHelper.h" />
+    <ClInclude Include="Engine\game\h\SceneEditor.h" />
     <ClInclude Include="Engine\game\h\TimeDisplay.h" />
     <ClInclude Include="Engine\game\h\ScoreDisplay.h" />
-    <ClInclude Include="Engine\game\h\hoge.h" />
     <ClInclude Include="Engine\game\h\LightingMode.h" />
     <ClInclude Include="Engine\game\h\Logger.h" />
     <ClInclude Include="Engine\game\h\SceneFactory.h" />
@@ -464,7 +467,7 @@
     <ClInclude Include="Engine\math\h\MakeAffine.h" />
     <ClInclude Include="Engine\graphics\h\ResourceObject.h" />
     <ClInclude Include="Engine\game\h\Input.h" />
-    <ClInclude Include="Engine\game\h\StringUtlity.h" />
+    <ClInclude Include="Engine\game\h\StringUtility.h" />
     <ClInclude Include="Engine\graphics\h\ImGuiManager.h" />
     <ClInclude Include="Engine\graphics\h\SpriteCommon.h" />
     <ClInclude Include="Engine\graphics\h\Sprite.h" />

@@ -1,7 +1,7 @@
 ﻿#include "TextureManager.h"
 #include "DirectXTex.h"
 #include "SrvManager.h"
-#include "StringUtlity.h"
+#include "StringUtility.h"
 #include <vector>
 #include <cassert>
 #include <algorithm>
@@ -62,47 +62,111 @@ void TextureManager::LoadTexture(const std::string& filePath)
         }
     }
 
-    // リソース作成
+    // テクスチャリソース記述子
     const DirectX::TexMetadata& metadata = finalImage.GetMetadata();
     D3D12_RESOURCE_DESC resourceDesc {};
-    resourceDesc.Width = UINT(metadata.width);
-    resourceDesc.Height = UINT(metadata.height);
-    resourceDesc.MipLevels = UINT16(metadata.mipLevels);
+    resourceDesc.Width            = UINT(metadata.width);
+    resourceDesc.Height           = UINT(metadata.height);
+    resourceDesc.MipLevels        = UINT16(metadata.mipLevels);
     resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize);
-    resourceDesc.Format = metadata.format;
+    resourceDesc.Format           = metadata.format;
     resourceDesc.SampleDesc.Count = 1;
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);
+    resourceDesc.Dimension        = D3D12_RESOURCE_DIMENSION(metadata.dimension);
 
-    D3D12_HEAP_PROPERTIES heapProperties {};
-    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    // VRAM（DEFAULT heap）にテクスチャリソースを作成
+    D3D12_HEAP_PROPERTIES defaultHeap {};
+    defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;
 
     ComPtr<ID3D12Resource> resource;
     hr = device->CreateCommittedResource(
-        &heapProperties,
+        &defaultHeap,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
+        D3D12_RESOURCE_STATE_COPY_DEST, // 転送先として開始
         nullptr,
         IID_PPV_ARGS(&resource));
     assert(SUCCEEDED(hr));
 
-    // データ転送（2Dテクスチャ・キューブマップ両対応）
+    // アップロードバッファのサイズを算出して作成
+    const UINT subresourceCount = UINT(metadata.mipLevels * metadata.arraySize);
+    const UINT64 uploadSize = GetRequiredIntermediateSize(resource.Get(), 0, subresourceCount);
+
+    D3D12_HEAP_PROPERTIES uploadHeap {};
+    uploadHeap.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    D3D12_RESOURCE_DESC uploadDesc {};
+    uploadDesc.Dimension        = D3D12_RESOURCE_DIMENSION_BUFFER;
+    uploadDesc.Width            = uploadSize;
+    uploadDesc.Height           = 1;
+    uploadDesc.DepthOrArraySize = 1;
+    uploadDesc.MipLevels        = 1;
+    uploadDesc.SampleDesc.Count = 1;
+    uploadDesc.Layout           = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    ComPtr<ID3D12Resource> uploadBuffer;
+    hr = device->CreateCommittedResource(
+        &uploadHeap,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadBuffer));
+    assert(SUCCEEDED(hr));
+
+    // サブリソースデータを構築（mip×array の全スライス）
+    std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+    subresources.reserve(subresourceCount);
     for (size_t arrayIndex = 0; arrayIndex < metadata.arraySize; ++arrayIndex) {
         for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
             const DirectX::Image* img = finalImage.GetImage(mipLevel, arrayIndex, 0);
-            UINT subresource = D3D12CalcSubresource(
-                UINT(mipLevel), UINT(arrayIndex), 0,
-                UINT(metadata.mipLevels), UINT(metadata.arraySize));
-            resource->WriteToSubresource(
-                subresource,
-                nullptr,
-                img->pixels,
-                UINT(img->rowPitch),
-                UINT(img->slicePitch));
+            D3D12_SUBRESOURCE_DATA sub {};
+            sub.pData      = img->pixels;
+            sub.RowPitch   = LONG_PTR(img->rowPitch);
+            sub.SlicePitch = LONG_PTR(img->slicePitch);
+            subresources.push_back(sub);
         }
     }
+
+    // 転送専用コマンドリストを作成して記録
+    ComPtr<ID3D12CommandAllocator> uploadAlloc;
+    ComPtr<ID3D12GraphicsCommandList> uploadCmdList;
+    hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&uploadAlloc));
+    assert(SUCCEEDED(hr));
+    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, uploadAlloc.Get(), nullptr, IID_PPV_ARGS(&uploadCmdList));
+    assert(SUCCEEDED(hr));
+
+    // アップロードバッファ → VRAM へコピーコマンドを積む
+    UpdateSubresources(uploadCmdList.Get(), resource.Get(), uploadBuffer.Get(),
+        0, 0, subresourceCount, subresources.data());
+
+    // バリア: COPY_DEST → PIXEL_SHADER_RESOURCE（全サブリソース＝全ミップレベルを一括遷移）
+    D3D12_RESOURCE_BARRIER barrier {};
+    barrier.Type                        = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource        = resource.Get();
+    barrier.Transition.Subresource      = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore      = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter       = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    uploadCmdList->ResourceBarrier(1, &barrier);
+
+    // コマンドリストを閉じてキューに投入
+    hr = uploadCmdList->Close();
+    assert(SUCCEEDED(hr));
+    ID3D12CommandList* cmdLists[] = { uploadCmdList.Get() };
+    dxCommon_->GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
+
+    // GPU完了を待つ（一時フェンス）
+    ComPtr<ID3D12Fence> uploadFence;
+    hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&uploadFence));
+    assert(SUCCEEDED(hr));
+    dxCommon_->GetCommandQueue()->Signal(uploadFence.Get(), 1);
+    if (uploadFence->GetCompletedValue() < 1) {
+        HANDLE evt = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        assert(evt != nullptr);
+        uploadFence->SetEventOnCompletion(1, evt);
+        WaitForSingleObject(evt, INFINITE);
+        CloseHandle(evt);
+    }
+    // uploadBuffer はここでスコープ外になり自動解放される
 
     // SRV作成（キューブマップか2Dテクスチャかで種別を分ける）
     uint32_t srvIndex = SrvManager::GetInstance()->Allocate();

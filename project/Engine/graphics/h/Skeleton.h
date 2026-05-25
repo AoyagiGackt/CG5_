@@ -38,7 +38,7 @@ struct Joint {
 
 class Skeleton {
 public:
-    int32_t root;                              // root JointのIndex
+    int32_t root = 0;                          // root JointのIndex
     std::map<std::string, int32_t> jointMap;   // Joint名 → Index
     std::vector<Joint> joints;                 // 全Jointのフラット配列
 

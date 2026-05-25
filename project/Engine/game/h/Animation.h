@@ -67,7 +67,7 @@ struct NodeAnimation {
  * @brief アニメーション全体のデータ
  */
 struct Animation {
-    float duration; ///< アニメーション全体の長さ（秒）
+    float duration = 0.0f; ///< アニメーション全体の長さ（秒）
     std::map<std::string, NodeAnimation> nodeAnimations; ///< ノード名 → NodeAnimation
 };
 

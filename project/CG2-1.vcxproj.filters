@@ -96,7 +96,10 @@
     <ClCompile Include="Engine\game\cpp\Logger.cpp">
       <Filter>ソースファイル\Engine\Base</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\game\cpp\StringUtlity.cpp">
+    <ClCompile Include="Engine\game\cpp\StringUtility.cpp">
+      <Filter>ソースファイル\Engine\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\game\cpp\JsonHelper.cpp">
       <Filter>ソースファイル\Engine\Base</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\Framework.cpp">
@@ -195,10 +198,10 @@
     <ClCompile Include="Engine\game\cpp\Game.cpp">
       <Filter>ソースファイル\Game\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\game\cpp\hoge.cpp">
-      <Filter>ソースファイル\Game\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp">
+      <Filter>ソースファイル\Game\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\game\cpp\SceneEditor.cpp">
       <Filter>ソースファイル\Game\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\TitleScene.cpp">
@@ -287,7 +290,10 @@
     <ClInclude Include="Engine\game\h\Framework.h">
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\game\h\StringUtlity.h">
+    <ClInclude Include="Engine\game\h\StringUtility.h">
+      <Filter>ヘッダーファイル\Engine\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\game\h\JsonHelper.h">
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
     <ClInclude Include="Engine\math\h\MakeAffine.h">
@@ -389,7 +395,13 @@
     <ClInclude Include="Engine\game\h\Game.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\game\h\GameConstants.h">
+      <Filter>ヘッダーファイル\Game\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\game\h\GamePlayScene.h">
+      <Filter>ヘッダーファイル\Game\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\game\h\SceneEditor.h">
       <Filter>ヘッダーファイル\Game\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\TitleScene.h">
@@ -402,9 +414,6 @@
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
     <ClInclude Include="Engine\graphics\h\Skydome.h">
-      <Filter>ヘッダーファイル\Game\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\game\h\hoge.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\Animation.h">
@@ -694,7 +703,10 @@
     <ClCompile Include="Engine\game\cpp\Logger.cpp">
       <Filter>ソースファイル\Engine\Base</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\game\cpp\StringUtlity.cpp">
+    <ClCompile Include="Engine\game\cpp\StringUtility.cpp">
+      <Filter>ソースファイル\Engine\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\game\cpp\JsonHelper.cpp">
       <Filter>ソースファイル\Engine\Base</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\Framework.cpp">
@@ -793,10 +805,10 @@
     <ClCompile Include="Engine\game\cpp\Game.cpp">
       <Filter>ソースファイル\Game\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\game\cpp\hoge.cpp">
-      <Filter>ソースファイル\Game\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp">
+      <Filter>ソースファイル\Game\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\game\cpp\SceneEditor.cpp">
       <Filter>ソースファイル\Game\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\TitleScene.cpp">
@@ -849,7 +861,10 @@
     <ClInclude Include="Engine\game\h\Framework.h">
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\game\h\StringUtlity.h">
+    <ClInclude Include="Engine\game\h\StringUtility.h">
+      <Filter>ヘッダーファイル\Engine\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\game\h\JsonHelper.h">
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
     <ClInclude Include="Engine\math\h\MakeAffine.h">
@@ -951,7 +966,13 @@
     <ClInclude Include="Engine\game\h\Game.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\game\h\GameConstants.h">
+      <Filter>ヘッダーファイル\Game\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\game\h\GamePlayScene.h">
+      <Filter>ヘッダーファイル\Game\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\game\h\SceneEditor.h">
       <Filter>ヘッダーファイル\Game\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\TitleScene.h">
@@ -964,9 +985,6 @@
       <Filter>ヘッダーファイル\Engine\Base</Filter>
     </ClInclude>
     <ClInclude Include="Engine\graphics\h\Skydome.h">
-      <Filter>ヘッダーファイル\Game\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\game\h\hoge.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\Animation.h">

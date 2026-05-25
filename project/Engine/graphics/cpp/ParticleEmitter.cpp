@@ -1,4 +1,5 @@
 ﻿#include "ParticleEmitter.h"
+#include "GameConstants.h"
 #include "ParticleManager.h"
 #include <cstdlib>
 
@@ -11,7 +12,7 @@ ParticleEmitter::ParticleEmitter(const std::string& name, const Transform& trans
 void ParticleEmitter::Update()
 {
     // 時刻を進める
-    timeCount_ += 1.0f / 60.0f;
+    timeCount_ += GameConstants::kFrameDeltaTime;
 
     // 発生頻度より大きいなら発生
     if (timeCount_ >= frequency_) {

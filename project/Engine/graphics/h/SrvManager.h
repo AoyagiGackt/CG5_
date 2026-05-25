@@ -104,7 +104,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
 
     /** @brief デスクリプタ1つあたりのメモリサイズ（ハードウェアによって異なる） */
-    uint32_t descriptorSize_;
+    uint32_t descriptorSize_ = 0;
 
     /** @brief 現在どこまでインデックスを使用しているかのカウント */
     uint32_t useIndex_ = 0;

@@ -13,7 +13,7 @@ struct Material
 {
     float4 color;
     int enableLighting;
-    int shadingType; // 0:Lambert  1:HalfLambert
+    int shadingType; // 0:Lambert  1,2:HalfLambert  3:Lambert+Phong  4:HalfLambert+Phong
     int useCubemap; // 1:キューブマップサンプリング（天球用）
     int useTexture; // 0:テクスチャ色なし（白=1,1,1,1 として扱う）
     float4x4 uvTransform;
@@ -130,23 +130,35 @@ PixelShaderOutput main(VertexShaderOutput input)
         // ----- 拡散反射（Diffuse）-----
         float NdotL = dot(N, L);
         float diffuse;
-        if (gMaterial.shadingType == 0)
+        if (gMaterial.shadingType == 0 || gMaterial.shadingType == 3)
         {
-            diffuse = max(NdotL, 0.0f);
+            diffuse = max(NdotL, 0.0f); // Lambert
         }
         else
         {
-            diffuse = NdotL * 0.5f + 0.5f;
+            diffuse = NdotL * 0.5f + 0.5f; // HalfLambert
         }
-        
+
         float3 diffuseColor =
             gMaterial.color.rgb * textureColor.rgb *
             gDirectionalLight.color.rgb * diffuse * gDirectionalLight.intensity;
 
-        // ----- 鏡面反射（Specular / Blinn-Phong）-----
-        float3 H = normalize(V + L);
-        float NdotH = max(dot(N, H), 0.0f);
-        float spec = pow(NdotH, max(gMaterial.shininess, 1.0f)) * step(0.0f, NdotL);
+        // ----- 鏡面反射（Specular）-----
+        float spec;
+        if (gMaterial.shadingType == 3 || gMaterial.shadingType == 4)
+        {
+            // Phong: 反射ベクトル使用
+            float3 R = reflect(-L, N);
+            float RdotV = max(dot(R, V), 0.0f);
+            spec = pow(RdotV, max(gMaterial.shininess, 1.0f)) * step(0.0f, NdotL);
+        }
+        else
+        {
+            // Blinn-Phong: ハーフベクトル使用
+            float3 H = normalize(V + L);
+            float NdotH = max(dot(N, H), 0.0f);
+            spec = pow(NdotH, max(gMaterial.shininess, 1.0f)) * step(0.0f, NdotL);
+        }
         float3 specularColor =
             gMaterial.specularColor *
             gDirectionalLight.color.rgb * spec * gDirectionalLight.intensity;
