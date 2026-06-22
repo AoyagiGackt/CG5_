@@ -34,6 +34,12 @@
     <FxCompile Include="Resources\shaders\Particle\EmitParticle.CS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.VS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.PS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engin\base\main.cpp">
@@ -209,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="engin\graphics\cpp\SkinCS.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="engin\graphics\cpp\PostProcessManager.cpp">
+      <Filter>ソースファイル\Engine\PostProcess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -404,6 +413,9 @@
     <ClInclude Include="engin\graphics\h\SkinCS.h">
       <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
     </ClInclude>
+    <ClInclude Include="engin\graphics\h\PostProcessManager.h">
+      <Filter>ヘッダーファイル\Engine\PostProcess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\object3d\Object3d.hlsli">
@@ -578,6 +590,12 @@
     </Filter>
     <Filter Include="ヘッダーファイル\Engine\Skeleton">
       <UniqueIdentifier>{47c68c08-6ded-4851-b605-c8f8a73b2e94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソースファイル\Engine\PostProcess">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダーファイル\Engine\PostProcess">
+      <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

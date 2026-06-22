@@ -214,6 +214,7 @@
     <ClCompile Include="engin\graphics\cpp\Cylinder.cpp" />
     <ClCompile Include="engin\graphics\cpp\Ring.cpp" />
     <ClCompile Include="engin\graphics\cpp\VideoPlayer.cpp" />
+    <ClCompile Include="engin\graphics\cpp\PostProcessManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\object3d\Object3dPS.hlsl">
@@ -294,6 +295,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Resources\shaders\skinned\SkinnedVS.hlsl" />
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.VS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.PS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engin\game\h\AbstractSceneFactory.h" />
@@ -360,6 +371,7 @@
     <ClInclude Include="engin\graphics\h\Cylinder.h" />
     <ClInclude Include="engin\graphics\h\Ring.h" />
     <ClInclude Include="engin\graphics\h\ImguiControl.h" />
+    <ClInclude Include="engin\graphics\h\PostProcessManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\lighting\LightingMode.hlsli" />

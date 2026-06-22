@@ -4,6 +4,7 @@
 #include "SceneFactory.h"
 #include "TitleScene.h"
 #include <SrvManager.h>
+#include "PostProcessManager.h"
 
 void MyGame::Initialize()
 {
@@ -42,8 +43,16 @@ void MyGame::Draw()
     dxCommon_->PreDraw();
     SrvManager::GetInstance()->PreDraw();
 
-    // 現在のシーンの描画
+    // オフスクリーン RT をアクティブにする
+    PostProcessManager::GetInstance()->BeginCapture(
+        dxCommon_->GetCommandList(), dxCommon_.get());
+
+    // 現在のシーンの描画（シーン内部で影パス後に再度 BeginCapture が呼ばれる）
     SceneManager::GetInstance()->Draw();
+
+    // ポストプロセスを適用してスワップチェーンへ出力
+    PostProcessManager::GetInstance()->Apply(
+        dxCommon_->GetCommandList(), dxCommon_.get(), SrvManager::GetInstance());
 
     imguiManager_->Draw(dxCommon_.get());
 

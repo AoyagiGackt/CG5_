@@ -6,6 +6,7 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
+#include "PostProcessManager.h"
 
 void Framework::Run()
 {
@@ -43,6 +44,8 @@ void Framework::Initialize()
 
     imguiManager_ = std::make_unique<ImGuiManager>();
     imguiManager_->Initialize(winApp_.get(), dxCommon_.get());
+
+    PostProcessManager::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
 }
 
 void Framework::Update()
@@ -68,6 +71,7 @@ void Framework::Finalize()
     }
 
     // 各種マネージャーのGPUリソースを解放する
+    PostProcessManager::GetInstance()->Finalize();
     ParticleManager::GetInstance()->Finalize();
     MeshManager::GetInstance()->Finalize();
     MaterialManager::GetInstance()->Finalize();

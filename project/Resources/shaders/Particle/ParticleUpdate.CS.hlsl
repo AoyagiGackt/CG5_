@@ -3,48 +3,55 @@
 
 struct GPUParticleState
 {
-    float3 position;    // 12
-    float  lifeTime;    //  4 -> 16
-    float3 velocity;    // 12
-    float  currentTime; //  4 -> 32
-    float4 color;       // 16 -> 48
-    float3 scale;       // 12
-    float  rotateZ;     //  4 -> 64
-    uint   alive;       //  4
-    uint   curveFlag;   //  4  (1 = enemyDeath 螺旋回転, 2 = flicker)
-    float2 pad;         //  8 -> 80
+    float3 position; // 12
+    float lifeTime; //  4 -> 16
+    float3 velocity; // 12
+    float currentTime; //  4 -> 32
+    float4 color; // 16 -> 48
+    float3 scale; // 12
+    float rotateZ; //  4 -> 64
+    uint alive; //  4
+    uint curveFlag; //  4  (1 = enemyDeath 螺旋回転, 2 = flicker)
+    float2 pad; //  8 -> 80
 };
 
 struct ParticleForGPU
 {
     float4x4 WVP;
     float4x4 World;
-    float4   color;
+    float4 color;
 };
 
 cbuffer UpdateConstants : register(b0)
 {
-    float4x4 gBillboard;    // 64
-    float4x4 gViewProj;     // 64
-    float    gDeltaTime;    //  4
-    uint     gMaxParticles; //  4
-    float2   gPad;          //  8 -> 144
+    float4x4 gBillboard; // 64
+    float4x4 gViewProj; // 64
+    float gDeltaTime; //  4
+    uint gMaxParticles; //  4
+    float2 gPad; //  8 -> 144
 };
 
-RWStructuredBuffer<GPUParticleState> gParticles  : register(u0);
-RWStructuredBuffer<ParticleForGPU>   gInstancing : register(u1);
+RWStructuredBuffer<GPUParticleState> gParticles : register(u0);
+RWStructuredBuffer<ParticleForGPU> gInstancing : register(u1);
 
 // -------------------------------------------------------
 //  xoroshiro128+
 // -------------------------------------------------------
-uint rotl32u(uint x, int k) { return (x << k) | (x >> (32 - k)); }
+uint rotl32u(uint x, int k)
+{
+    return (x << k) | (x >> (32 - k));
+}
 
 uint4 xoshiroSeed(uint seed, uint time, uint idx)
 {
     uint a = seed ^ (idx * 2654435761u);
     uint b = time ^ (idx * 2246822519u);
-    a ^= a >> 16; a *= 0x45d9f3bu; a ^= a >> 16;
-    b ^= b >> 16; b *= 0x45d9f3bu; b ^= b >> 16;
+    a ^= a >> 16;
+    a *= 0x45d9f3bu;
+    a ^= a >> 16;
+    b ^= b >> 16;
+    b *= 0x45d9f3bu;
+    b ^= b >> 16;
     return uint4(a, b, a ^ 0x9e3779b9u, b ^ 0x6c62272eu);
 }
 
@@ -52,7 +59,10 @@ uint xoshiroNext(inout uint4 s)
 {
     uint result = s.x + s.w;
     uint t = s.y << 9;
-    s.z ^= s.x; s.w ^= s.y; s.y ^= s.z; s.x ^= s.w;
+    s.z ^= s.x;
+    s.w ^= s.y;
+    s.y ^= s.z;
+    s.x ^= s.w;
     s.z ^= t;
     s.w = rotl32u(s.w, 11);
     return result;
@@ -69,10 +79,10 @@ float rand01(inout uint4 s)
 float4x4 MakeScale(float3 s)
 {
     return float4x4(
-        s.x, 0,   0,   0,
-        0,   s.y, 0,   0,
-        0,   0,   s.z, 0,
-        0,   0,   0,   1
+        s.x, 0, 0, 0,
+        0, s.y, 0, 0,
+        0, 0, s.z, 0,
+        0, 0, 0, 1
     );
 }
 
@@ -80,10 +90,10 @@ float4x4 MakeRotateZ(float a)
 {
     float c = cos(a), s = sin(a);
     return float4x4(
-        c,  s, 0, 0,
+        c, s, 0, 0,
         -s, c, 0, 0,
-        0,  0, 1, 0,
-        0,  0, 0, 1
+        0, 0, 1, 0,
+        0, 0, 0, 1
     );
 }
 
@@ -100,13 +110,16 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 {
     // --- Sync 1: 共有変数をスレッド 0 が初期化し、全スレッドに同期 ---
     if (GTid.x == 0)
+    {
         gs_aliveCount = 0u;
+    }
+    
     GroupMemoryBarrierWithGroupSync();
 
-    uint idx    = DTid.x;
+    uint idx = DTid.x;
     bool active = (idx < gMaxParticles);
 
-    GPUParticleState p = (GPUParticleState)0;
+    GPUParticleState p = (GPUParticleState) 0;
     bool alive = false;
 
     if (active)
@@ -124,7 +137,9 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 
     // --- 不可分操作: 生存パーティクルをグループ単位でカウント ---
     if (alive)
+    {
         InterlockedAdd(gs_aliveCount, 1u);
+    }
 
     // --- Sync 2: 全スレッドの InterlockedAdd 完了を待つ ---
     GroupMemoryBarrierWithGroupSync();
@@ -134,7 +149,9 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 
     // dead / 範囲外スレッドはここで終了（2 つのバリアはすでに通過済み）
     if (!active || !alive)
+    {
         return;
+    }
 
     // --- 生存パーティクルのみ以下を処理 ---
 
@@ -147,10 +164,10 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
         float vy = p.velocity.y;
         p.velocity.x = vx * cc - vy * cs;
         p.velocity.y = vx * cs + vy * cc;
-        p.rotateZ   += 12.0f * gDeltaTime;
+        p.rotateZ += 12.0f * gDeltaTime;
     }
 
-    p.position    += p.velocity * gDeltaTime;
+    p.position += p.velocity * gDeltaTime;
     p.currentTime += gDeltaTime;
     gParticles[idx] = p;
 
@@ -161,16 +178,16 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
     world._m32 = p.position.z;
     world._m33 = 1.0f;
 
-    gInstancing[idx].WVP   = mul(world, gViewProj);
+    gInstancing[idx].WVP = mul(world, gViewProj);
     gInstancing[idx].World = world;
 
     // curveFlag == 2: xoroshiro128+ でパーティクルごとに独立した周期でランダム点滅
     if (p.curveFlag == 2)
     {
         float flickerHz = 2.0f + float(idx % 7u) * 0.857142857f; // 2〜8 Hz でばらつかせる
-        uint  timeSlot  = (uint)(p.currentTime * flickerHz);
-        uint4 rng       = xoshiroSeed(timeSlot, idx * 3141592653u, idx);
-        float r         = rand01(rng);
+        uint timeSlot = (uint) (p.currentTime * flickerHz);
+        uint4 rng = xoshiroSeed(timeSlot, idx * 3141592653u, idx);
+        float r = rand01(rng);
         gInstancing[idx].color = float4(p.color.rgb, p.color.a * (r < 0.75f ? 1.0f : 0.0f));
     }
     else

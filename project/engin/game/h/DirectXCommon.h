@@ -96,6 +96,9 @@ public: // メンバ関数
     /** @brief DSV（深度バッファ）のハンドルを取得 */
     D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() { return dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(); }
 
+    /** @brief 深度ステンシルリソースを取得（ポストプロセス SRV 作成用） */
+    ID3D12Resource* GetDepthStencilResource() { return depthStencilResource_.Get(); }
+
     // --- フェンス関連 ---
 
     /** @brief フェンスの取得 */

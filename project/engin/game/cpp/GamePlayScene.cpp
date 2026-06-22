@@ -8,6 +8,7 @@
 #pragma comment(lib, "comdlg32.lib")
 #include "ImguiManager.h"
 #include "ParticleManager.h"
+#include "PostProcessManager.h"
 #include "SceneManager.h"
 #include "ScoreManager.h"
 #include "TextureManager.h"
@@ -674,6 +675,9 @@ void GamePlayScene::UpdateDebugUI()
         }
     }
 
+    // ポストプロセス
+    PostProcessManager::GetInstance()->ShowImGui();
+
     ImGui::End();
 
     // =====================================================
@@ -959,6 +963,10 @@ void GamePlayScene::DrawShadowPass()
 void GamePlayScene::Draw()
 {
     DrawShadowPass();
+
+    // 影パスがスワップチェーン RT に戻すため、オフスクリーン RT を再セット
+    PostProcessManager::GetInstance()->BeginCapture(
+        dxCommon_->GetCommandList(), dxCommon_);
 
     // 3Dオブジェクト
     modelCommon_->CommonDrawSettings();

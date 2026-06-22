@@ -320,12 +320,13 @@ void DirectXCommon::CreateSwapChain()
 void DirectXCommon::CreateDepthBuffer()
 {
     // 深度ステンシルテクスチャの設定
+    // R24G8_TYPELESS: DSV では D24_UNORM_S8_UINT、SRV では R24_UNORM_X8_TYPELESS として使用
     D3D12_RESOURCE_DESC resourceDesc = {};
     resourceDesc.Width = winApp_->kClientWidth;
     resourceDesc.Height = winApp_->kClientHeight;
     resourceDesc.MipLevels = 1;
     resourceDesc.DepthOrArraySize = 1;
-    resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    resourceDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
