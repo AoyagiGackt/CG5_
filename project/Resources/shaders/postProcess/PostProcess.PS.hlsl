@@ -62,12 +62,13 @@ float4 main(PSInput input) : SV_TARGET
     [branch]
     if (boxFilterIntensity > 0.001f)
     {
+        static const float kBoxBlurRadius = 6.0f; // タップ間隔を広げて大げさにぼかす
         float3 box = float3(0, 0, 0);
         [unroll]
         for (int by = -1; by <= 1; by++)
         [unroll]
         for (int bx = -1; bx <= 1; bx++)
-            box += sceneTex.Sample(linearSamp, uv + float2((float)bx, (float)by) * texel).rgb;
+            box += sceneTex.Sample(linearSamp, uv + float2((float)bx, (float)by) * texel * kBoxBlurRadius).rgb;
         box /= 9.0f;
         finalColor = lerp(finalColor, box, boxFilterIntensity);
     }
@@ -79,12 +80,13 @@ float4 main(PSInput input) : SV_TARGET
     if (gaussianIntensity > 0.001f)
     {
         static const float kGW[3][3] = { {1,2,1},{2,4,2},{1,2,1} };
+        static const float kGaussianBlurRadius = 5.0f; // タップ間隔を広げて大げさにぼかす
         float3 gauss = float3(0, 0, 0);
         [unroll]
         for (int gy = -1; gy <= 1; gy++)
         [unroll]
         for (int gx = -1; gx <= 1; gx++)
-            gauss += sceneTex.Sample(linearSamp, uv + float2((float)gx, (float)gy) * texel).rgb
+            gauss += sceneTex.Sample(linearSamp, uv + float2((float)gx, (float)gy) * texel * kGaussianBlurRadius).rgb
                      * kGW[gy + 1][gx + 1];
         gauss /= 16.0f;
         finalColor = lerp(finalColor, gauss, gaussianIntensity);
