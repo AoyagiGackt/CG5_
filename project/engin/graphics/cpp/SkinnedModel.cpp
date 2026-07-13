@@ -144,17 +144,19 @@ void SkinnedModel::LoadGltfFile(DirectXCommon* /*dxCommon*/, const std::string& 
                      mesh->mVertices[vIdx].z,
                      1.0f
                 };
-                if (mesh->HasNormals())
+                if (mesh->HasNormals()) {
                     vd.normal = {
                         -mesh->mNormals[vIdx].x,
                          mesh->mNormals[vIdx].y,
                          mesh->mNormals[vIdx].z
                     };
-                if (mesh->HasTextureCoords(0))
+                }
+                if (mesh->HasTextureCoords(0)) {
                     vd.texcoord = {
                         mesh->mTextureCoords[0][vIdx].x,
                         mesh->mTextureCoords[0][vIdx].y
                     };
+                }
 
                 for (int k = 0; k < 4; ++k) {
                     vd.boneIndices[k] = indices[vIdx * 4 + k];

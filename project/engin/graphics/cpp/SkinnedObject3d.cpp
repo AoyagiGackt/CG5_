@@ -33,7 +33,7 @@ void SkinnedObject3d::SetModel(SkinnedModel* model)
 
 void SkinnedObject3d::InitializeSkinCS()
 {
-    if (!model_ || !skinCommon_) return;
+    if (!model_ || !skinCommon_) { return; }
     skinCS_.Initialize(skinCommon_->GetDxCommon(),
                        model_->GetVertexResource(),
                        model_->GetVertexCount());
@@ -79,7 +79,7 @@ void SkinnedObject3d::Initialize(SkinCommon* skinCommon)
     // パレット: 256 バイト境界に合わせる（128 * 64 = 8192 はすでに倍数）
     paletteCB_ = makeBuffer(sizeof(Matrix4x4) * kMaxJoints);
     paletteCB_->Map(0, nullptr, reinterpret_cast<void**>(&paletteData_));
-    for (int i = 0; i < kMaxJoints; ++i) paletteData_[i] = MakeIdentity4x4();
+    for (int i = 0; i < kMaxJoints; ++i) { paletteData_[i] = MakeIdentity4x4(); }
 
 #ifdef USE_IMGUI
     skeletonDebugRenderer_ = std::make_unique<SkeletonDebugRenderer>();
@@ -89,7 +89,7 @@ void SkinnedObject3d::Initialize(SkinCommon* skinCommon)
 
 void SkinnedObject3d::Update()
 {
-    if (!model_) return;
+    if (!model_) { return; }
 
     // アニメーション時刻を進める
     if (animation_.duration > 0.0f) {
@@ -101,12 +101,15 @@ void SkinnedObject3d::Update()
         auto it = animation_.nodeAnimations.find(joint.name);
         if (it != animation_.nodeAnimations.end()) {
             const NodeAnimation& na = it->second;
-            if (!na.translate.keyframes.empty())
+            if (!na.translate.keyframes.empty()) {
                 joint.transform.translate = CalculateValue(na.translate, animTime_);
-            if (!na.rotate.keyframes.empty())
+            }
+            if (!na.rotate.keyframes.empty()) {
                 joint.transform.rotate    = CalculateValue(na.rotate,    animTime_);
-            if (!na.scale.keyframes.empty())
+            }
+            if (!na.scale.keyframes.empty()) {
                 joint.transform.scale     = CalculateValue(na.scale,     animTime_);
+            }
         }
     }
     skeleton_.Update();
@@ -155,7 +158,7 @@ void SkinnedObject3d::DebugDraw()
 
 void SkinnedObject3d::Draw()
 {
-    if (!model_) return;
+    if (!model_) { return; }
     ID3D12GraphicsCommandList* cmd = skinCommon_->GetDxCommon()->GetCommandList();
 
     if (skinCSReady_ && commonModelCommon_) {

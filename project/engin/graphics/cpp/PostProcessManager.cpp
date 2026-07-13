@@ -331,14 +331,53 @@ void PostProcessManager::Apply(
 }
 
 // =====================================================
+// エフェクト ON/OFF 切り替え
+// =====================================================
+
+float* PostProcessManager::GetIntensityPtr(PostEffectType type)
+{
+    switch (type) {
+    case PostEffectType::Grayscale:    return &params_.grayscaleIntensity;
+    case PostEffectType::Vignette:     return &params_.vignetteIntensity;
+    case PostEffectType::BoxFilter:    return &params_.boxFilterIntensity;
+    case PostEffectType::Gaussian:     return &params_.gaussianIntensity;
+    case PostEffectType::LumOutline:   return &params_.lumOutlineIntensity;
+    case PostEffectType::DepthOutline: return &params_.depthOutlineIntensity;
+    case PostEffectType::RadialBlur:   return &params_.radialBlurIntensity;
+    case PostEffectType::Dissolve:     return &params_.dissolveThreshold;
+    case PostEffectType::Random:       return &params_.randomIntensity;
+    default:                           return nullptr;
+    }
+}
+
+void PostProcessManager::ToggleEffect(PostEffectType type)
+{
+    float* intensity = GetIntensityPtr(type);
+    if (!intensity) {
+        return;
+    }
+
+    size_t index = static_cast<size_t>(type);
+    if (*intensity > 0.001f) {
+        // ON → OFF（現在の強度を退避してから0にする）
+        effectSavedIntensity_[index] = *intensity;
+        *intensity                   = 0.0f;
+    } else {
+        // OFF → ON（退避しておいた強度を復元）
+        *intensity = effectSavedIntensity_[index];
+    }
+}
+
+// =====================================================
 // ImGui
 // =====================================================
 
 void PostProcessManager::ShowImGui()
 {
 #ifdef USE_IMGUI
-    if (!ImGui::CollapsingHeader("Post Process"))
+    if (!ImGui::CollapsingHeader("Post Process")) {
         return;
+    }
 
     ImGui::Indent();
 

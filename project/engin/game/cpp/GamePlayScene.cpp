@@ -151,7 +151,7 @@ void GamePlayScene::Update()
     // 楕円パーティクルをリング周回軌道で放出
     static constexpr float kOrbitSpeed = 3.14159265f * 2.0f / 3.0f; // 1周/3秒
     ringOrbitAngle_ += kOrbitSpeed / 60.0f;
-    if (ringOrbitAngle_ > 3.14159265f * 2.0f) ringOrbitAngle_ -= 3.14159265f * 2.0f;
+    if (ringOrbitAngle_ > 3.14159265f * 2.0f) { ringOrbitAngle_ -= 3.14159265f * 2.0f; }
 
     ellipseParticleTimer_ += 1.0f / 60.0f;
     while (ellipseParticleTimer_ >= kEllipseEmitInterval) {

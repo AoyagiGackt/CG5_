@@ -57,6 +57,17 @@ void Framework::Update()
     if (input_->TriggerKey(DIK_F11)) {
         winApp_->ToggleFullscreen();
     }
+
+    // 数字キー(1〜9)でポストエフェクトのON/OFFを切り替え（リリースビルドでも確認できるように）
+    if (input_->TriggerKey(DIK_1)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Grayscale); }
+    if (input_->TriggerKey(DIK_2)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Vignette); }
+    if (input_->TriggerKey(DIK_3)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::BoxFilter); }
+    if (input_->TriggerKey(DIK_4)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Gaussian); }
+    if (input_->TriggerKey(DIK_5)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::LumOutline); }
+    if (input_->TriggerKey(DIK_6)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::DepthOutline); }
+    if (input_->TriggerKey(DIK_7)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::RadialBlur); }
+    if (input_->TriggerKey(DIK_8)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Dissolve); }
+    if (input_->TriggerKey(DIK_9)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Random); }
 }
 
 void Framework::Finalize()

@@ -33,6 +33,21 @@ struct PostProcessParams
 };
 static_assert(sizeof(PostProcessParams) % 16 == 0, "PostProcessParams must be 16-byte aligned");
 
+// 数字キー(1〜9)でのON/OFF切り替え対象となるエフェクト種別
+enum class PostEffectType
+{
+    Grayscale = 0,  // 1
+    Vignette,       // 2
+    BoxFilter,      // 3
+    Gaussian,       // 4
+    LumOutline,     // 5
+    DepthOutline,   // 6
+    RadialBlur,     // 7
+    Dissolve,       // 8
+    Random,         // 9
+    Count
+};
+
 class PostProcessManager
 {
 public:
@@ -50,6 +65,9 @@ public:
     // ImGui コントロールを描画
     void ShowImGui();
 
+    // 指定エフェクトのON/OFFを切り替える（現在の強度を保存し、0との間でトグル）
+    void ToggleEffect(PostEffectType type);
+
     PostProcessParams params_;
 
 private:
@@ -57,6 +75,14 @@ private:
 
     void CreateOffScreenRT(ID3D12Device* device);
     void CreatePSO(DirectXCommon* dxCommon);
+
+    // エフェクト種別に対応するparams_内の強度メンバへのポインタを取得
+    float* GetIntensityPtr(PostEffectType type);
+
+    // トグルOFF時に強度を退避しておく領域（OFF→ON復帰時にこの値へ戻す）
+    float effectSavedIntensity_[static_cast<size_t>(PostEffectType::Count)] = {
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f
+    };
 
     DirectXCommon* dxCommon_ = nullptr;
 

@@ -149,8 +149,9 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
 
     group.freeList.clear();
     group.freeList.reserve(ParticleGroup::kNumMaxInstance);
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > 0; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > 0; ) {
         group.freeList.push_back(i);
+    }
 
     // ---- エミッターバッファ (UPLOAD heap, 256 bytes, 常時マップ) ----
     group.emitterBuffer = dxCommon_->CreateBufferResource(256);
@@ -165,7 +166,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
 
 uint32_t ParticleManager::AllocateSlot(ParticleGroup& group)
 {
-    if (group.freeList.empty()) return UINT32_MAX;
+    if (group.freeList.empty()) { return UINT32_MAX; }
     uint32_t slot = group.freeList.back();
     group.freeList.pop_back();
     return slot;
@@ -311,8 +312,9 @@ void ParticleManager::EmitScatterLoop(const std::string& name,
     memset(group.particleUploadData, 0, sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance);
     group.slotExpiry.fill(0.0f);
     group.freeList.clear();
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; ) {
         group.freeList.push_back(i);
+    }
     group.pendingSlots.clear();
 
     for (uint32_t i = 0; i < count; ++i) {
@@ -358,8 +360,9 @@ void ParticleManager::EmitBurst(const std::string& name,
         sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance);
     group.slotExpiry.fill(0.0f);
     group.freeList.clear();
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; ) {
         group.freeList.push_back(i);
+    }
 
     for (uint32_t i = 0; i < count; ++i) {
         GPUParticleState& p = group.particleUploadData[i];
@@ -726,10 +729,10 @@ void ParticleManager::SetAdditiveBlend(const std::string& name, bool additive)
 bool ParticleManager::IsGroupAlive(const std::string& name) const
 {
     auto it = particleGroups_.find(name);
-    if (it == particleGroups_.end()) return false;
+    if (it == particleGroups_.end()) { return false; }
     const ParticleGroup& group = it->second;
     for (uint32_t i = 0; i < ParticleGroup::kNumMaxInstance; ++i) {
-        if (group.groupTime < group.slotExpiry[i]) return true;
+        if (group.groupTime < group.slotExpiry[i]) { return true; }
     }
     return false;
 }
