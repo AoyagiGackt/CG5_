@@ -168,6 +168,9 @@
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp">
       <Filter>ソースファイル\Game\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\game\cpp\hoge.cpp">
+      <Filter>ソースファイル\Game\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\game\cpp\SceneEditor.cpp">
       <Filter>ソースファイル\Game\Scene</Filter>
     </ClCompile>
@@ -360,6 +363,9 @@
       <Filter>ヘッダーファイル\Game\Core</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\GamePlayScene.h">
+      <Filter>ヘッダーファイル\Game\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\game\h\hoge.h">
       <Filter>ヘッダーファイル\Game\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Engine\game\h\SceneEditor.h">

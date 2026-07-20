@@ -170,6 +170,7 @@
     <ClCompile Include="Engine\game\cpp\Game.cpp" />
     <ClCompile Include="Engine\game\cpp\GameObject.cpp" />
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\hoge.cpp" />
     <ClCompile Include="Engine\game\cpp\JsonHelper.cpp" />
     <ClCompile Include="Engine\game\cpp\SceneEditor.cpp" />
     <ClCompile Include="Engine\game\cpp\LightingMode.cpp" />
@@ -350,6 +351,7 @@
     <ClInclude Include="Engine\game\h\GameObject.h" />
     <ClInclude Include="Engine\game\h\GameConstants.h" />
     <ClInclude Include="Engine\game\h\GamePlayScene.h" />
+    <ClInclude Include="Engine\game\h\hoge.h" />
     <ClInclude Include="Engine\game\h\GameTime.h" />
     <ClInclude Include="Engine\game\h\JsonHelper.h" />
     <ClInclude Include="Engine\game\h\SceneEditor.h" />
