@@ -342,6 +342,7 @@ imgui.ini
 *.dll
 *.pdb
 
+#*.obj
 *.tlog
 *.idb
 *.ilk

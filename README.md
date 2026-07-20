@@ -1,3 +1,3 @@
-[![DebugBuild](https://github.com/AoyagiGackt/CG4/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG4/actions/workflows/DebugBuild.yml)
-[![DevelopmentBuild](https://github.com/AoyagiGackt/CG4/actions/workflows/DevelopmentBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG4/actions/workflows/DevelopmentBuild.yml)
-[![ReleaseBuild](https://github.com/AoyagiGackt/CG4/actions/workflows/ReleaseBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG4/actions/workflows/ReleaseBuild.yml)
+[![DebugBuild](https://github.com/AoyagiGackt/CG5_/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG5_/actions/workflows/DebugBuild.yml)
+[![DevelopmentBuild](https://github.com/AoyagiGackt/CG5_/actions/workflows/DevelopmentBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG5_/actions/workflows/DevelopmentBuild.yml)
+[![ReleaseBuild](https://github.com/AoyagiGackt/CG5_/actions/workflows/ReleaseBuild.yml/badge.svg)](https://github.com/AoyagiGackt/CG5_/actions/workflows/ReleaseBuild.yml)

@@ -49,11 +49,12 @@ void main(uint3 dtid : SV_DispatchThreadID)
     float4 weights = (totalWeight > 0.0f) ? input.boneWeights / totalWeight
                                           : float4(1, 0, 0, 0);
 
+    float w0 = weights.x, w1 = weights.y, w2 = weights.z, w3 = weights.w;
     float4x4 skinMatrix =
-        weights.x * gMatrixPalette[input.boneIndices.x] +
-        weights.y * gMatrixPalette[input.boneIndices.y] +
-        weights.z * gMatrixPalette[input.boneIndices.z] +
-        weights.w * gMatrixPalette[input.boneIndices.w];
+        w0 * gMatrixPalette[input.boneIndices.x] +
+        w1 * gMatrixPalette[input.boneIndices.y] +
+        w2 * gMatrixPalette[input.boneIndices.z] +
+        w3 * gMatrixPalette[input.boneIndices.w];
 
     OutputVertex output;
     output.position = mul(input.position, skinMatrix);

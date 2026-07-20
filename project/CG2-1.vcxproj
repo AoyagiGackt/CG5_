@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -20,6 +20,7 @@
     <ProjectGuid>{6d06300c-8293-46ec-aa68-de6c7590cde1}</ProjectGuid>
     <RootNamespace>CG21</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Engine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -83,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engin\math\h;$(ProjectDir)engin\graphics\cpp;$(ProjectDir)engin\graphics\h;$(ProjectDir)engin\game\h;$(ProjectDir)engin\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)..\externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Engine\math\h;$(ProjectDir)Engine\graphics\cpp;$(ProjectDir)Engine\graphics\h;$(ProjectDir)Engine\game\h;$(ProjectDir)Engine\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)..\externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,7 +112,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engin\math\h;$(ProjectDir)engin\graphics\cpp;$(ProjectDir)engin\graphics\h;$(ProjectDir)engin\game\h;$(ProjectDir)engin\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Engine\math\h;$(ProjectDir)Engine\graphics\cpp;$(ProjectDir)Engine\graphics\h;$(ProjectDir)Engine\game\h;$(ProjectDir)Engine\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,7 +140,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engin\math\h;$(ProjectDir)engin\graphics\cpp;$(ProjectDir)engin\graphics\h;$(ProjectDir)engin\game\h;$(ProjectDir)engin\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Engine\math\h;$(ProjectDir)Engine\graphics\cpp;$(ProjectDir)Engine\graphics\h;$(ProjectDir)Engine\game\h;$(ProjectDir)Engine\game\cpp;$(ProjectDir)Resources\shaders\lighting;$(ProjectDir)Resources\shaders\object3d;$(SolutionDir)externals\imgui;$(SolutionDir)..\externals\DirectXTex;$(SolutionDir)..\externals\assimp\include;$(ProjectDir)Resources\shaders\Particle;$(ProjectDir)Resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,65 +157,66 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="engin\game\cpp\Animation.cpp" />
-    <ClCompile Include="engin\game\cpp\Audio.cpp" />
-    <ClCompile Include="engin\game\cpp\ClearScene.cpp" />
-    <ClCompile Include="engin\game\cpp\GameOverScene.cpp" />
-    <ClCompile Include="engin\game\cpp\PauseScene.cpp" />
-    <ClCompile Include="engin\game\cpp\GameTime.cpp" />
-    <ClCompile Include="engin\game\cpp\TimeDisplay.cpp" />
-    <ClCompile Include="engin\game\cpp\ScoreDisplay.cpp" />
-    <ClCompile Include="engin\game\cpp\Collision.cpp" />
-    <ClCompile Include="engin\game\cpp\Framework.cpp" />
-    <ClCompile Include="engin\game\cpp\Game.cpp" />
-    <ClCompile Include="engin\game\cpp\GameObject.cpp" />
-    <ClCompile Include="engin\game\cpp\GamePlayScene.cpp" />
-    <ClCompile Include="engin\game\cpp\hoge.cpp" />
-    <ClCompile Include="engin\game\cpp\LightingMode.cpp" />
-    <ClCompile Include="engin\game\cpp\SceneFactory.cpp" />
-    <ClCompile Include="engin\game\cpp\SceneManager.cpp" />
-    <ClCompile Include="engin\game\cpp\ScoreManager.cpp" />
-    <ClCompile Include="engin\game\cpp\LoadingScene.cpp" />
-    <ClCompile Include="engin\game\cpp\TitleScene.cpp" />
-    <ClCompile Include="engin\game\cpp\WorldTransform.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Camera.cpp" />
-    <ClCompile Include="engin\game\cpp\D3DResourceLeakChecker.cpp" />
-    <ClCompile Include="engin\game\cpp\DirectXCommon.cpp" />
-    <ClCompile Include="engin\game\cpp\Logger.cpp" />
-    <ClCompile Include="engin\game\cpp\WinApp.cpp" />
-    <ClCompile Include="engin\game\cpp\StringUtlity.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Fade.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ImguiControl.cpp" />
-    <ClCompile Include="engin\graphics\cpp\LightManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\MapChipField.cpp" />
-    <ClCompile Include="engin\graphics\cpp\MaterialManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\MeshManager.cpp" />
-    <ClCompile Include="engin\base\main.cpp" />
-    <ClCompile Include="engin\game\cpp\Input.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ImGuiManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Skeleton.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SkeletonDebugRenderer.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SkinCS.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SkinnedModel.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SkinCommon.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SkinnedObject3d.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Skydome.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SpriteCommon.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Sprite.cpp" />
-    <ClCompile Include="engin\graphics\cpp\TextureManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Object3dCommon.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ShadowManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Model.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Object3d.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ModelManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ModelCommon.cpp" />
-    <ClCompile Include="engin\graphics\cpp\SrvManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ParticleManager.cpp" />
-    <ClCompile Include="engin\graphics\cpp\ParticleEmitter.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Cylinder.cpp" />
-    <ClCompile Include="engin\graphics\cpp\Ring.cpp" />
-    <ClCompile Include="engin\graphics\cpp\VideoPlayer.cpp" />
-    <ClCompile Include="engin\graphics\cpp\PostProcessManager.cpp" />
+    <ClCompile Include="Engine\game\cpp\Animation.cpp" />
+    <ClCompile Include="Engine\game\cpp\Audio.cpp" />
+    <ClCompile Include="Engine\game\cpp\ClearScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\GameOverScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\PauseScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\GameTime.cpp" />
+    <ClCompile Include="Engine\game\cpp\TimeDisplay.cpp" />
+    <ClCompile Include="Engine\game\cpp\ScoreDisplay.cpp" />
+    <ClCompile Include="Engine\game\cpp\Collision.cpp" />
+    <ClCompile Include="Engine\game\cpp\Framework.cpp" />
+    <ClCompile Include="Engine\game\cpp\Game.cpp" />
+    <ClCompile Include="Engine\game\cpp\GameObject.cpp" />
+    <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\JsonHelper.cpp" />
+    <ClCompile Include="Engine\game\cpp\SceneEditor.cpp" />
+    <ClCompile Include="Engine\game\cpp\LightingMode.cpp" />
+    <ClCompile Include="Engine\game\cpp\SceneFactory.cpp" />
+    <ClCompile Include="Engine\game\cpp\SceneManager.cpp" />
+    <ClCompile Include="Engine\game\cpp\ScoreManager.cpp" />
+    <ClCompile Include="Engine\game\cpp\LoadingScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\TitleScene.cpp" />
+    <ClCompile Include="Engine\game\cpp\WorldTransform.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Camera.cpp" />
+    <ClCompile Include="Engine\game\cpp\D3DResourceLeakChecker.cpp" />
+    <ClCompile Include="Engine\game\cpp\DirectXCommon.cpp" />
+    <ClCompile Include="Engine\game\cpp\Logger.cpp" />
+    <ClCompile Include="Engine\game\cpp\WinApp.cpp" />
+    <ClCompile Include="Engine\game\cpp\StringUtility.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Fade.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ImguiControl.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\LightManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\MapChipField.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\MaterialManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\MeshManager.cpp" />
+    <ClCompile Include="Engine\base\main.cpp" />
+    <ClCompile Include="Engine\game\cpp\Input.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ImGuiManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Skeleton.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SkeletonDebugRenderer.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SkinCS.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SkinnedModel.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SkinCommon.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SkinnedObject3d.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Skydome.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SpriteCommon.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Sprite.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\TextureManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Object3dCommon.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ShadowManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Model.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Object3d.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ModelManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ModelCommon.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\SrvManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ParticleManager.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\ParticleEmitter.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Cylinder.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\Ring.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\VideoPlayer.cpp" />
+    <ClCompile Include="Engine\graphics\cpp\PostProcessManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\object3d\Object3dPS.hlsl">
@@ -300,78 +302,106 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\skinned\SkinningCS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Resources\shaders\postProcess\PostProcess.PS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\Particle\ParticleUpdate.CS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\debug\SkeletonDebugVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\debug\SkeletonDebugPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Pixel</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engin\game\h\AbstractSceneFactory.h" />
-    <ClInclude Include="engin\game\h\Animation.h" />
-    <ClInclude Include="engin\game\h\Audio.h" />
-    <ClInclude Include="engin\game\h\BaseScene.h" />
-    <ClInclude Include="engin\game\h\ClearScene.h" />
-    <ClInclude Include="engin\game\h\GameOverScene.h" />
-    <ClInclude Include="engin\game\h\PauseScene.h" />
-    <ClInclude Include="engin\game\h\Collision.h" />
-    <ClInclude Include="engin\game\h\CollisionConfig.h" />
-    <ClInclude Include="engin\game\h\CollisionManager.h" />
-    <ClInclude Include="engin\game\h\Framework.h" />
-    <ClInclude Include="engin\game\h\Game.h" />
-    <ClInclude Include="engin\game\h\GameObject.h" />
-    <ClInclude Include="engin\game\h\GamePlayScene.h" />
-    <ClInclude Include="engin\game\h\GameTime.h" />
-    <ClInclude Include="engin\game\h\TimeDisplay.h" />
-    <ClInclude Include="engin\game\h\ScoreDisplay.h" />
-    <ClInclude Include="engin\game\h\hoge.h" />
-    <ClInclude Include="engin\game\h\LightingMode.h" />
-    <ClInclude Include="engin\game\h\Logger.h" />
-    <ClInclude Include="engin\game\h\SceneFactory.h" />
-    <ClInclude Include="engin\game\h\SceneManager.h" />
-    <ClInclude Include="engin\game\h\ScoreManager.h" />
-    <ClInclude Include="engin\game\h\LoadingScene.h" />
-    <ClInclude Include="engin\game\h\TitleScene.h" />
-    <ClInclude Include="engin\game\h\WorldTransform.h" />
-    <ClInclude Include="engin\graphics\h\BlendMode.h" />
-    <ClInclude Include="engin\graphics\h\Camera.h" />
-    <ClInclude Include="engin\graphics\h\D3DResourceLeakChecker.h" />
-    <ClInclude Include="engin\game\h\DirectXCommon.h" />
-    <ClInclude Include="engin\game\h\WinApp.h" />
-    <ClInclude Include="engin\graphics\h\Fade.h" />
-    <ClInclude Include="engin\graphics\h\LightManager.h" />
-    <ClInclude Include="engin\graphics\h\MapChipField.h" />
-    <ClInclude Include="engin\graphics\h\MaterialManager.h" />
-    <ClInclude Include="engin\graphics\h\MeshManager.h" />
-    <ClInclude Include="engin\graphics\h\Skeleton.h" />
-    <ClInclude Include="engin\graphics\h\SkeletonDebugRenderer.h" />
-    <ClInclude Include="engin\graphics\h\SkinCS.h" />
-    <ClInclude Include="engin\graphics\h\SkinnedModel.h" />
-    <ClInclude Include="engin\graphics\h\SkinCommon.h" />
-    <ClInclude Include="engin\graphics\h\SkinnedObject3d.h" />
-    <ClInclude Include="engin\graphics\h\Skydome.h" />
-    <ClInclude Include="engin\graphics\h\VideoPlayer.h" />
-    <ClInclude Include="engin\math\h\MakeAffine.h" />
-    <ClInclude Include="engin\graphics\h\ResourceObject.h" />
-    <ClInclude Include="engin\game\h\Input.h" />
-    <ClInclude Include="engin\game\h\StringUtlity.h" />
-    <ClInclude Include="engin\graphics\h\ImGuiManager.h" />
-    <ClInclude Include="engin\graphics\h\SpriteCommon.h" />
-    <ClInclude Include="engin\graphics\h\Sprite.h" />
-    <ClInclude Include="engin\graphics\h\TextureManager.h" />
-    <ClInclude Include="engin\graphics\h\Object3dCommon.h" />
-    <ClInclude Include="engin\graphics\h\ShadowManager.h" />
-    <ClInclude Include="engin\graphics\h\Model.h" />
-    <ClInclude Include="engin\graphics\h\Object3d.h" />
-    <ClInclude Include="engin\graphics\h\ModelManager.h" />
-    <ClInclude Include="engin\graphics\h\ModelCommon.h" />
-    <ClInclude Include="engin\graphics\h\SrvManager.h" />
-    <ClInclude Include="engin\graphics\h\ParticleManager.h" />
-    <ClInclude Include="engin\graphics\h\ParticleEmitter.h" />
-    <ClInclude Include="engin\graphics\h\Cylinder.h" />
-    <ClInclude Include="engin\graphics\h\Ring.h" />
-    <ClInclude Include="engin\graphics\h\ImguiControl.h" />
-    <ClInclude Include="engin\graphics\h\PostProcessManager.h" />
+    <ClInclude Include="Engine\game\h\AbstractSceneFactory.h" />
+    <ClInclude Include="Engine\game\h\Animation.h" />
+    <ClInclude Include="Engine\game\h\Audio.h" />
+    <ClInclude Include="Engine\game\h\BaseScene.h" />
+    <ClInclude Include="Engine\game\h\ClearScene.h" />
+    <ClInclude Include="Engine\game\h\GameOverScene.h" />
+    <ClInclude Include="Engine\game\h\PauseScene.h" />
+    <ClInclude Include="Engine\game\h\Collision.h" />
+    <ClInclude Include="Engine\game\h\CollisionConfig.h" />
+    <ClInclude Include="Engine\game\h\CollisionManager.h" />
+    <ClInclude Include="Engine\game\h\Framework.h" />
+    <ClInclude Include="Engine\game\h\Game.h" />
+    <ClInclude Include="Engine\game\h\GameObject.h" />
+    <ClInclude Include="Engine\game\h\GameConstants.h" />
+    <ClInclude Include="Engine\game\h\GamePlayScene.h" />
+    <ClInclude Include="Engine\game\h\GameTime.h" />
+    <ClInclude Include="Engine\game\h\JsonHelper.h" />
+    <ClInclude Include="Engine\game\h\SceneEditor.h" />
+    <ClInclude Include="Engine\game\h\TimeDisplay.h" />
+    <ClInclude Include="Engine\game\h\ScoreDisplay.h" />
+    <ClInclude Include="Engine\game\h\LightingMode.h" />
+    <ClInclude Include="Engine\game\h\Logger.h" />
+    <ClInclude Include="Engine\game\h\SceneFactory.h" />
+    <ClInclude Include="Engine\game\h\SceneManager.h" />
+    <ClInclude Include="Engine\game\h\ScoreManager.h" />
+    <ClInclude Include="Engine\game\h\LoadingScene.h" />
+    <ClInclude Include="Engine\game\h\TitleScene.h" />
+    <ClInclude Include="Engine\game\h\WorldTransform.h" />
+    <ClInclude Include="Engine\graphics\h\BlendMode.h" />
+    <ClInclude Include="Engine\graphics\h\Camera.h" />
+    <ClInclude Include="Engine\graphics\h\D3DResourceLeakChecker.h" />
+    <ClInclude Include="Engine\game\h\DirectXCommon.h" />
+    <ClInclude Include="Engine\game\h\WinApp.h" />
+    <ClInclude Include="Engine\graphics\h\Fade.h" />
+    <ClInclude Include="Engine\graphics\h\LightManager.h" />
+    <ClInclude Include="Engine\graphics\h\MapChipField.h" />
+    <ClInclude Include="Engine\graphics\h\MaterialManager.h" />
+    <ClInclude Include="Engine\graphics\h\MeshManager.h" />
+    <ClInclude Include="Engine\graphics\h\Skeleton.h" />
+    <ClInclude Include="Engine\graphics\h\SkeletonDebugRenderer.h" />
+    <ClInclude Include="Engine\graphics\h\SkinCS.h" />
+    <ClInclude Include="Engine\graphics\h\SkinnedModel.h" />
+    <ClInclude Include="Engine\graphics\h\SkinCommon.h" />
+    <ClInclude Include="Engine\graphics\h\SkinnedObject3d.h" />
+    <ClInclude Include="Engine\graphics\h\Skydome.h" />
+    <ClInclude Include="Engine\graphics\h\VideoPlayer.h" />
+    <ClInclude Include="Engine\math\h\MakeAffine.h" />
+    <ClInclude Include="Engine\graphics\h\ResourceObject.h" />
+    <ClInclude Include="Engine\game\h\Input.h" />
+    <ClInclude Include="Engine\game\h\StringUtility.h" />
+    <ClInclude Include="Engine\graphics\h\ImGuiManager.h" />
+    <ClInclude Include="Engine\graphics\h\SpriteCommon.h" />
+    <ClInclude Include="Engine\graphics\h\Sprite.h" />
+    <ClInclude Include="Engine\graphics\h\TextureManager.h" />
+    <ClInclude Include="Engine\graphics\h\Object3dCommon.h" />
+    <ClInclude Include="Engine\graphics\h\ShadowManager.h" />
+    <ClInclude Include="Engine\graphics\h\Model.h" />
+    <ClInclude Include="Engine\graphics\h\Object3d.h" />
+    <ClInclude Include="Engine\graphics\h\ModelManager.h" />
+    <ClInclude Include="Engine\graphics\h\ModelCommon.h" />
+    <ClInclude Include="Engine\graphics\h\SrvManager.h" />
+    <ClInclude Include="Engine\graphics\h\ParticleManager.h" />
+    <ClInclude Include="Engine\graphics\h\ParticleEmitter.h" />
+    <ClInclude Include="Engine\graphics\h\Cylinder.h" />
+    <ClInclude Include="Engine\graphics\h\Ring.h" />
+    <ClInclude Include="Engine\graphics\h\ImguiControl.h" />
+    <ClInclude Include="Engine\graphics\h\PostProcessManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\lighting\LightingMode.hlsli" />
