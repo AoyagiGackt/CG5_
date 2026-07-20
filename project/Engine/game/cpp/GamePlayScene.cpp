@@ -1,10 +1,14 @@
 #include "GamePlayScene.h"
+#include <algorithm>
 #include <cmath>
-#include "GameConstants.h"
-#include "GrayscaleEffect.h"
-#include "HsvFilter.h"
-#include "ImageFilter.h"
+#include <random>
+#include <commdlg.h>
+#include <fstream>
+#include <sstream>
+#pragma comment(lib, "comdlg32.lib")
+#include "ImguiManager.h"
 #include "ParticleManager.h"
+#include "PostProcessManager.h"
 #include "SceneManager.h"
 #include "ScoreManager.h"
 #include "TextureManager.h"
@@ -15,102 +19,89 @@
 
 void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* audio)
 {
-    // 引数のポインタをメンバ変数に保存しておく（後で Update/Draw からも使えるように）
     dxCommon_ = dxCommon;
     input_ = input;
     audio_ = audio;
 
     // ----- 描画共通設定 -----
-    // スプライト（2D画像）描画に必要な共通設定（シェーダーのセットアップなど）
     spriteCommon_ = std::make_unique<SpriteCommon>();
     spriteCommon_->Initialize(dxCommon_);
 
-    // 3Dモデル描画に必要な共通設定
     modelCommon_ = std::make_unique<ModelCommon>();
     modelCommon_->Initialize(dxCommon_);
 
-    // 3Dオブジェクト描画に必要な共通設定（ライト情報なども含む）
     objectCommon_ = std::make_unique<Object3dCommon>();
     objectCommon_->Initialize(dxCommon_);
 
-    // ----- シングルトンをキャッシュ（以降はポインタ経由でアクセス）-----
-    // シングルトン = ゲーム中に1つだけ存在するシステム管理クラス
-    // 毎フレーム GetInstance() を呼ぶとオーバーヘッドが生じるので、起動時に1度だけ取得して変数に保存する
-    srvManager_      = SrvManager::GetInstance();
-    particleManager_ = ParticleManager::GetInstance();
-    scoreManager_    = ScoreManager::GetInstance();
-    grayscaleEffect_ = GrayscaleEffect::GetInstance();
-    imageFilter_     = ImageFilter::GetInstance();
-    hsvFilter_       = HsvFilter::GetInstance();
-
-    // ----- 影の描画（シャドウマップ）-----
-    // シャドウマップ = 光源視点から深度画像を作り、それを使ってオブジェクトの影を描く手法
     shadowManager_ = std::make_unique<ShadowManager>();
-    shadowManager_->Initialize(dxCommon_, srvManager_);
+    shadowManager_->Initialize(dxCommon_, SrvManager::GetInstance());
 
     // ----- カメラ -----
     camera_ = std::make_unique<Camera>();
-    camera_->SetTranslate({ 14.5f, 6.0f, -30.0f }); // 初期位置（少し高く、手前から見下ろす角度）
-    Object3d::SetCommonCamera(camera_.get()); // 全 3D オブジェクトがこのカメラを使うよう設定
+    camera_->SetTranslate({ 14.5f, 6.0f, -30.0f });
+    Object3d::SetCommonCamera(camera_.get());
+
+    // ----- キャラクター・オブジェクト -----
+    modelSkydome_ = std::make_unique<Model>();
+    modelSkydome_->Initialize(modelCommon_.get(), "Resources/SkyDome/SkyDome.obj", "Resources/rostock_laage_airport_4k.dds");
+
+    skydome_ = std::make_unique<Skydome>();
+    skydome_->Initialize(modelCommon_.get(), modelSkydome_.get());
+
+    auto hoge = std::make_unique<Hoge>();
+    hoge->Initialize(modelCommon_.get(), dxCommon, input, audio);
+    animCube_ = hoge.get();
+    gameObjects_.push_back(std::move(hoge));
 
     // ----- スキンメッシュ（human）-----
-    // スキンメッシュ = ボーン（骨格）でポリゴンを動かすアニメーション付き3Dモデル
     skinCommon_ = std::make_unique<SkinCommon>();
     skinCommon_->Initialize(dxCommon_);
 
-    // gltf ファイルからモデルデータ（頂点・マテリアル）を読み込む
     modelHuman_ = std::make_unique<SkinnedModel>();
     modelHuman_->Initialize(dxCommon_,
         "Resources/human/sneakWalk.gltf",
         "Resources/human/white.png");
 
-    // 同じ gltf からボーン階層（NodeHierarchy）とアニメーションデータを読み込む
     Node humanRootNode = LoadNodeHierarchyFromFile("Resources/human", "sneakWalk.gltf");
     Skeleton humanSkeleton = Skeleton::Create(humanRootNode);
     Animation humanAnimation = LoadAnimationFile("Resources/human", "sneakWalk.gltf");
 
-    // ワールドに配置するインスタンスを作り、モデル・スケルトン・アニメーションを紐付ける
     human_ = std::make_unique<SkinnedObject3d>();
     human_->Initialize(skinCommon_.get());
     human_->SetModel(modelHuman_.get());
     human_->SetSkeleton(std::move(humanSkeleton));
     human_->SetAnimation(std::move(humanAnimation));
     human_->SetPosition(humanPosition_);
-
-    // SkinnedObject3d の「クラス全体で共有する設定」を一括でセットする
     SkinnedObject3d::SetCommonCamera(camera_.get());
     SkinnedObject3d::SetCommonObjectCommon(objectCommon_.get());
     SkinnedObject3d::SetCommonShadowManager(shadowManager_.get());
     SkinnedObject3d::SetCommonModelCommon(modelCommon_.get());
 
     // ----- エフェクト・進行管理 -----
-
     // 白パーティクル（1024個を個別ライフタイムで散布・自動再配置）
-    // 一度に大量に生成して画面全体にふわふわ漂わせる演出
-    particleManager_->CreateParticleGroup("white", "Resources/white.png");
-    particleManager_->SetAdditiveBlend("white", false); // 加算合成オフ（通常のアルファ合成）
-    particleManager_->EmitScatterLoop(
-        "white", whiteParticlePos_, GameConstants::kWhiteParticleScatterRadius,
+    ParticleManager::GetInstance()->CreateParticleGroup("white", "Resources/white.png");
+    ParticleManager::GetInstance()->SetAdditiveBlend("white", false);
+    ParticleManager::GetInstance()->EmitScatterLoop(
+        "white", whiteParticlePos_, 20.0f,
         static_cast<uint32_t>(whiteParticleCount_),
         whiteParticleColor_,
-        GameConstants::kWhiteParticleLifetimeMin, GameConstants::kWhiteParticleLifetimeMax,
+        2.0f, 5.0f,
         whiteParticleScale_);
 
     // 楕円パーティクルグループ（circle2.png を使用）
-    // リング周回用の水色の粒。Update() で毎フレーム少しずつ放出する
-    particleManager_->CreateParticleGroup("ellipse", "Resources/circle2.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("ellipse", "Resources/circle2.png");
 
     // 斬撃パーティクルグループ（gradationLine.png を使用）
-    particleManager_->CreateParticleGroup("slash", "Resources/gradationLine.png");
+    ParticleManager::GetInstance()->CreateParticleGroup("slash", "Resources/gradationLine.png");
 
-    // Ring（ドーナツ型メッシュ）を生成して初期パラメータをセット
+    // Ring（gradationLine.png、AddressV=CLAMP）
     ring_ = std::make_unique<Ring>();
     ring_->Initialize(dxCommon_);
     ring_->SetPosition(ringPosition_);
     ring_->SetInnerRadius(ringInnerRadius_);
     ring_->SetOuterRadius(ringOuterRadius_);
 
-    // Cylinder（円柱メッシュ）を生成して初期パラメータをセット
+    // Cylinder
     cylinder_ = std::make_unique<Cylinder>();
     cylinder_->Initialize(dxCommon_);
     cylinder_->SetPosition(cylinderPosition_);
@@ -118,339 +109,1073 @@ void GamePlayScene::Initialize(DirectXCommon* dxCommon, Input* input, Audio* aud
     cylinder_->SetBottomRadius(cylinderBottomRadius_);
     cylinder_->SetHeight(cylinderHeight_);
 
-    // スコアをファイルから読み込み、今回プレイのスコアをリセットする
-    scoreManager_->LoadScores();
-    scoreManager_->ResetCurrentScore();
-
-    // ゲーム内時刻を初期化（ゲーム開始 = 0時0分）
+    ScoreManager::GetInstance()->LoadScores();
+    ScoreManager::GetInstance()->ResetCurrentScore();
     gameTime_.Initialize();
 
-    // ----- オフスクリーンレンダリング -----
-    // 画面に直接描かずに一旦テクスチャに描いておく仕組み
-    // これにより、後からポストエフェクト（グレースケールなど）を重ねて適用できる
-    renderTexture_ = std::make_unique<RenderTexture>();
-    renderTexture_->Initialize(dxCommon_, srvManager_,
-        WinApp::kClientWidth, WinApp::kClientHeight);
-
-    // レンダーテクスチャを画面いっぱいに貼るためのスプライト
-    renderTextureSprite_ = std::make_unique<Sprite>();
-    renderTextureSprite_->Initialize(spriteCommon_.get(), "Resources/white.png");
-    renderTextureSprite_->SetExternalTexture(renderTexture_->GetSrvIndex()); // テクスチャをレンダーテクスチャに差し替え
-    renderTextureSprite_->SetPosition({ 0.0f, 0.0f });
-    renderTextureSprite_->SetSize({ static_cast<float>(WinApp::kClientWidth),
-                                    static_cast<float>(WinApp::kClientHeight) });
-
     // ----- デバッグパラメータ読み込み -----
-    // 前回エディタで保存したカメラ位置・UIレイアウトなどを JSON から復元する
-    sceneEditor_.LoadAll(BuildEditContext());
-
-    // カメラスムージング用の初期目標値を現在のカメラ位置から取る
-    cameraTargetPos_ = camera_->GetTranslate();
-    cameraTargetRot_ = camera_->GetRotate();
+    LoadCameraParams();
+    LoadModelPaths();
+    LoadUILayout();
 }
 
-// =====================================================
-// EditContext 構築ヘルパー
-// =====================================================
-
-// SceneEditor（ImGuiデバッグUI）が各オブジェクトにアクセスするための「参照集」を組み立てる。
-// ポインタを渡すので、エディタ側でスライダーを動かすと即座にゲーム側の変数に反映される。
-SceneEditor::EditContext GamePlayScene::BuildEditContext()
-{
-    SceneEditor::EditContext ctx;
-
-    // オブジェクト本体へのポインタ（エディタが直接メソッドを呼ぶために必要）
-    ctx.camera       = camera_.get();
-    ctx.ring         = ring_.get();
-    ctx.cylinder     = cylinder_.get();
-    ctx.skydome      = skydome_.get(); // 現在 nullptr（無効）
-    ctx.human        = human_.get();
-    ctx.spriteCommon = spriteCommon_.get();
-
-    // カメラ制御パラメータへのポインタ
-    ctx.cameraTargetPos    = &cameraTargetPos_;
-    ctx.cameraTargetRot    = &cameraTargetRot_;
-    ctx.cameraSmoothFrames = &cameraSmoothFrames_;
-    ctx.cameraPosHistory   = &cameraPosHistory_;
-    ctx.cameraRotHistory   = &cameraRotHistory_;
-
-    // Ring パラメータへのポインタ
-    ctx.ringPosition    = &ringPosition_;
-    ctx.ringRotation    = &ringRotation_;
-    ctx.ringColor       = &ringColor_;
-    ctx.ringScale       = &ringScale_;
-    ctx.ringInnerRadius = &ringInnerRadius_;
-    ctx.ringOuterRadius = &ringOuterRadius_;
-
-    // Cylinder パラメータへのポインタ
-    ctx.cylinderPosition     = &cylinderPosition_;
-    ctx.cylinderRotation     = &cylinderRotation_;
-    ctx.cylinderColor        = &cylinderColor_;
-    ctx.cylinderScale        = &cylinderScale_;
-    ctx.cylinderTopRadius    = &cylinderTopRadius_;
-    ctx.cylinderBottomRadius = &cylinderBottomRadius_;
-    ctx.cylinderHeight       = &cylinderHeight_;
-    ctx.cylinderAlphaRef     = &cylinderAlphaRef_;
-
-    // Skydome パラメータへのポインタ
-    ctx.skyColor      = &skyColor_;
-    ctx.skyRotOffsetY = &skyRotOffsetY_;
-
-    // Human パラメータへのポインタ
-    ctx.humanPosition  = &humanPosition_;
-    ctx.humanRotation  = &humanRotation_;
-    ctx.humanScale     = &humanScale_;
-    ctx.humanAnimSpeed = &humanAnimSpeed_;
-    ctx.showSkeleton   = &showSkeletonDebug_;
-
-    // 白パーティクルパラメータへのポインタ
-    ctx.whiteParticlePos   = &whiteParticlePos_;
-    ctx.whiteParticleColor = &whiteParticleColor_;
-    ctx.whiteParticleScale = &whiteParticleScale_;
-    ctx.whiteParticleCount = &whiteParticleCount_;
-
-    // ゲーム内時刻（表示用の値コピー）
-    ctx.gameHour   = gameTime_.GetHour();
-    ctx.gameMinute = gameTime_.GetMinute();
-    return ctx;
-}
-
-// =====================================================
-// カメラスムージング（毎フレーム呼ぶ）
-// =====================================================
-
-// 過去 cameraSmoothFrames_ フレーム分の位置・角度を記録しておき、
-// その平均値を実際のカメラ座標として適用する（ボックスフィルタ補間）。
-// フレーム数が多いほど動きが滑らかになるが、反応が遅くなる。
-void GamePlayScene::UpdateCameraSmoothing()
-{
-    // 今フレームの目標位置・角度を履歴に追加する
-    cameraPosHistory_.push_back(cameraTargetPos_);
-    cameraRotHistory_.push_back(cameraTargetRot_);
-
-    // 履歴が指定フレーム数を超えたら古いものを先頭から捨てる
-    while ((int)cameraPosHistory_.size() > cameraSmoothFrames_) {
-        cameraPosHistory_.pop_front();
-        cameraRotHistory_.pop_front();
-    }
-
-    // 履歴全体の平均を計算する
-    Vector3 avgPos = {};
-    Vector3 avgRot = {};
-    for (const auto& p : cameraPosHistory_) {
-        avgPos.x += p.x; avgPos.y += p.y; avgPos.z += p.z;
-    }
-    for (const auto& r : cameraRotHistory_) {
-        avgRot.x += r.x; avgRot.y += r.y; avgRot.z += r.z;
-    }
-    float n = static_cast<float>(cameraPosHistory_.size());
-
-    // 平均値をカメラに適用する
-    camera_->SetTranslate({ avgPos.x / n, avgPos.y / n, avgPos.z / n });
-    camera_->SetRotate({ avgRot.x / n, avgRot.y / n, avgRot.z / n });
-}
-
-// =====================================================
-// 更新処理（毎フレーム呼ばれる）
-// =====================================================
+/// <summary>
+/// 更新処理
+/// </summary>
 
 void GamePlayScene::Update()
 {
-    // ゲーム内時刻を1フレーム分進める（引数は時刻の進み速度。1.0f = リアルタイムと同じ速度）
+    // ゲーム内時刻の更新
     gameTime_.Update(1.0f);
 
-    // カメラのスムージング（ぬるぬる補間）を更新する
-    UpdateCameraSmoothing();
+    float timeRatio = gameTime_.GetElapsedMinutes() / GameTime::kTotalGameMinutes;
 
-    // ----- 影の更新 -----
-    // 光源方向が変わったときに影用の視錐台（光が届く範囲）を更新する
+    // 天球の更新
+    skydome_->Update(camera_.get(), timeRatio);
+
+    // シャドウの更新
     shadowManager_->Update(objectCommon_->GetLightDirection());
-
-    // 3Dオブジェクトとスキンメッシュに、最新の「影行列」を渡す（シャドウマップ参照に使う）
     Object3d::SetLightViewProjection(shadowManager_->GetLightViewProjection());
     SkinnedObject3d::SetLightViewProjection(shadowManager_->GetLightViewProjection());
 
-    // ----- ゲームオブジェクトの更新 -----
+    // ゲームオブジェクトの更新
     for (auto& obj : gameObjects_) {
         obj->Update();
     }
 
-    // human のアニメーション・トランスフォームを更新する
     human_->Update();
 
-    // ----- デバッグ UI 更新 -----
-    // ImGui パネルを描画し、エディタで変更した値をゲームに反映する
-    sceneEditor_.Update(BuildEditContext());
+    // UIと描画関連の更新
+    UpdateDebugUI();
 
-    // ----- 楕円パーティクル（リング周回軌道）の放出 -----
-    // kOrbitSpeed = 1周（2π ラジアン）にかかるフレーム数から逆算した1フレームあたりの角速度
-    static constexpr float kOrbitSpeed = GameConstants::kTwoPi / GameConstants::kOrbitPeriodSeconds;
+    // 楕円パーティクルをリング周回軌道で放出
+    static constexpr float kOrbitSpeed = 3.14159265f * 2.0f / 3.0f; // 1周/3秒
+    ringOrbitAngle_ += kOrbitSpeed / 60.0f;
+    if (ringOrbitAngle_ > 3.14159265f * 2.0f) { ringOrbitAngle_ -= 3.14159265f * 2.0f; }
 
-    // 軌道角度を1フレーム分進める
-    ringOrbitAngle_ += kOrbitSpeed * GameConstants::kFrameDeltaTime;
-
-    // 360度（2π ラジアン）を超えたら0に戻す（無限に増え続けないようにするため）
-    if (ringOrbitAngle_ > GameConstants::kTwoPi) {
-        ringOrbitAngle_ -= GameConstants::kTwoPi;
-    }
-
-    // タイマーを1フレーム分進めて、放出間隔に達したらパーティクルを出す
-    ellipseParticleTimer_ += GameConstants::kFrameDeltaTime;
+    ellipseParticleTimer_ += 1.0f / 60.0f;
     while (ellipseParticleTimer_ >= kEllipseEmitInterval) {
         ellipseParticleTimer_ -= kEllipseEmitInterval;
 
-        // リングの中間半径の位置（円軌道上）を放出座標として計算する
-        float r = (ringInnerRadius_ + ringOuterRadius_) * 0.5f;
+        float r = (ringInnerRadius_ + ringOuterRadius_) * 0.5f; // リングの中間半径
         Vector3 emitPos = {
-            ringPosition_.x + std::cos(ringOrbitAngle_) * r, // X: cos で横方向の位置
+            ringPosition_.x + std::cos(ringOrbitAngle_) * r,
             ringPosition_.y,
-            ringPosition_.z + std::sin(ringOrbitAngle_) * r  // Z: sin で奥行き方向の位置
+            ringPosition_.z + std::sin(ringOrbitAngle_) * r
         };
-
-        // 接線方向（円の接線 = 進行方向）に速度ベクトルを計算する
-        // sin/cos を使って軌道の接線（90度ずれた方向）を出す
+        // 接線方向 + わずかな上昇
+        float tangentSpeed = 0.03f;
         Vector3 vel = {
-            -std::sin(ringOrbitAngle_) * GameConstants::kEllipseTangentSpeed,
-             GameConstants::kEllipseYVelocity, // 少し上方向にも動かす
-             std::cos(ringOrbitAngle_) * GameConstants::kEllipseTangentSpeed
+            -std::sin(ringOrbitAngle_) * tangentSpeed,
+            0.04f,
+            std::cos(ringOrbitAngle_) * tangentSpeed
         };
 
-        // 水色（R=0.6, G=0.85, B=1.0, A=1.0）で楕円パーティクルを1粒放出する
-        particleManager_->EmitEllipse(
+        ParticleManager::GetInstance()->EmitEllipse(
             "ellipse",
             emitPos,
             vel,
             { 0.6f, 0.85f, 1.0f, 1.0f },
-            GameConstants::kEllipseLifetime,
-            GameConstants::kEllipseBaseScale,
-            GameConstants::kEllipseScaleRandom
+            1.5f,
+            0.4f,
+            0.2f
         );
     }
 
-    // Ring・Cylinder は毎フレーム、カメラとの距離に応じた処理（ビルボードなど）を行う
     ring_->Update(camera_.get());
     cylinder_->Update(camera_.get());
 }
 
 // =====================================================
-// 描画（毎フレーム呼ばれる）
+// ファイルダイアログヘルパー（デバッグ専用）
 // =====================================================
 
-// シャドウマップパスを実行する（影用の深度テクスチャを生成する）。
-// この後の通常描画パスでこの深度テクスチャを参照して影を描く。
+#ifdef USE_IMGUI
+/** @brief Windows標準のファイル選択ダイアログを開き、選択されたパスを返す
+ *  @param filter  例: "PNG\0*.png\0OBJ\0*.obj\0All\0*.*\0\0"（\0区切り、末尾\0\0）
+ *  @param initialDir  最初に開くフォルダ（nullptr で前回の場所）
+ *  @return 選択されたファイルの絶対パス。キャンセル時は空文字列
+ */
+static std::string OpenFileDialog(const char* filter, const char* initialDir = nullptr)
+{
+    char szFile[MAX_PATH] = {};
+    OPENFILENAMEA ofn = {};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = GetActiveWindow();
+    ofn.lpstrFilter = filter;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrInitialDir = initialDir;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+    return GetOpenFileNameA(&ofn) ? std::string(szFile) : "";
+}
+#endif
+
+// =====================================================
+// デバッグ UI（ImGui）
+// =====================================================
+
+void GamePlayScene::UpdateDebugUI()
+{
+#ifdef USE_IMGUI
+    if (!imguiManager_) {
+        return;
+    }
+
+    // =====================================================
+    // Hierarchy（左パネル）
+    // =====================================================
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(220, 400), ImGuiCond_Once);
+    ImGui::Begin("Hierarchy");
+
+    if (ImGui::Selectable("Camera", editorSelectedType_ == SelectedType::Camera)) {
+        editorSelectedType_ = SelectedType::Camera;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("Skydome", editorSelectedType_ == SelectedType::Skydome)) {
+        editorSelectedType_ = SelectedType::Skydome;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("AnimatedCube", editorSelectedType_ == SelectedType::AnimatedCube)) {
+        editorSelectedType_ = SelectedType::AnimatedCube;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("Human", editorSelectedType_ == SelectedType::Human)) {
+        editorSelectedType_ = SelectedType::Human;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("Ring", editorSelectedType_ == SelectedType::Ring)) {
+        editorSelectedType_ = SelectedType::Ring;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("Cylinder", editorSelectedType_ == SelectedType::Cylinder)) {
+        editorSelectedType_ = SelectedType::Cylinder;
+        editorSelectedIndex_ = -1;
+    }
+    if (ImGui::Selectable("White Particles", editorSelectedType_ == SelectedType::WhiteParticles)) {
+        editorSelectedType_ = SelectedType::WhiteParticles;
+        editorSelectedIndex_ = -1;
+    }
+
+    // ----- UI Elements -----
+    char uiHeader[48];
+    snprintf(uiHeader, sizeof(uiHeader), "UI Elements (%d)", (int)uiElements_.size());
+    bool uiOpen = ImGui::TreeNodeEx(uiHeader);
+    ImGui::SameLine();
+    if (ImGui::SmallButton("+##addUI")) {
+        UIEntry entry;
+        entry.name = "UI Element " + std::to_string(uiElements_.size() + 1);
+        entry.texPath = "";
+        entry.sprite = std::make_unique<Sprite>();
+        entry.sprite->Initialize(spriteCommon_.get(), entry.texPath);
+        entry.sprite->SetPosition({ 640.0f, 360.0f });
+        entry.sprite->SetSize({ 100.0f, 100.0f });
+        uiElements_.push_back(std::move(entry));
+    }
+    if (uiOpen) {
+        for (int i = 0; i < (int)uiElements_.size(); i++) {
+            bool sel = (editorSelectedType_ == SelectedType::UIElement && editorSelectedIndex_ == i);
+            char label[80];
+            snprintf(label, sizeof(label), "  %s", uiElements_[i].name.c_str());
+            if (ImGui::Selectable(label, sel)) {
+                editorSelectedType_ = SelectedType::UIElement;
+                editorSelectedIndex_ = i;
+            }
+        }
+        ImGui::TreePop();
+    }
+
+    // ----- Save ボタン（選択中のオブジェクトに応じて保存先を切り替え） -----
+    ImGui::Separator();
+    static float savedTimer = 0.0f;
+    if (savedTimer > 0.0f) {
+        savedTimer -= 1.0f / 60.0f;
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.4f, 1.0f), "Saved!");
+    } else {
+        if (ImGui::Button("Save", ImVec2(-1, 0))) {
+            switch (editorSelectedType_) {
+            case SelectedType::Camera:
+                SaveCameraParams();
+                savedTimer = 1.5f;
+                break;
+            case SelectedType::UIElement:
+                SaveUILayout();
+                savedTimer = 1.5f;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    ImGui::End();
+
+    // =====================================================
+    // Inspector（右パネル）
+    // =====================================================
+    ImGui::SetNextWindowPos(ImVec2(1060, 0), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(220, 500), ImGuiCond_Once);
+    ImGui::Begin("Inspector");
+
+    // 選択インデックスが範囲外になった場合にリセット
+    if (editorSelectedType_ == SelectedType::UIElement && (editorSelectedIndex_ < 0 || editorSelectedIndex_ >= (int)uiElements_.size())) {
+        editorSelectedType_ = SelectedType::None;
+    }
+
+    switch (editorSelectedType_) {
+
+    case SelectedType::Camera: {
+        ImGui::TextColored(ImVec4(1, 1, 0, 1), "[Camera]");
+        ImGui::Separator();
+        Vector3 pos = camera_->GetTranslate();
+        if (ImGui::DragFloat3("Position", &pos.x, 0.1f)) {
+            camera_->SetTranslate(pos);
+        }
+
+        Vector3 rot = camera_->GetRotate();
+        
+        if (ImGui::DragFloat3("Rotation", &rot.x, 0.01f)) {
+            camera_->SetRotate(rot);
+        }
+
+        ImGui::Separator();
+        
+        if (ImGui::Button("Save##inspCam")) {
+            SaveCameraParams();
+        }
+
+        break;
+    }
+
+    case SelectedType::Ring: {
+        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.8f, 1), "[Ring]");
+        ImGui::Separator();
+
+        if (ImGui::DragFloat3("Position", &ringPosition_.x, 0.1f)) {
+            ring_->SetPosition(ringPosition_);
+        }
+
+        if (ImGui::DragFloat3("Rotation", &ringRotation_.x, 0.01f)) {
+            ring_->SetRotation(ringRotation_);
+        }
+
+        if (ImGui::DragFloat("Scale", &ringScale_, 0.01f, 0.01f, 20.0f)) {
+            ring_->SetScale(ringScale_);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::DragFloat("Inner Radius", &ringInnerRadius_, 0.05f, 0.01f, ringOuterRadius_ - 0.01f)) {
+            ring_->SetInnerRadius(ringInnerRadius_);
+        }
+
+        if (ImGui::DragFloat("Outer Radius", &ringOuterRadius_, 0.05f, ringInnerRadius_ + 0.01f, 50.0f)) {
+            ring_->SetOuterRadius(ringOuterRadius_);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::ColorEdit4("Color", &ringColor_.x)) {
+            ring_->SetColor(ringColor_);
+        }
+
+        break;
+    }
+
+    case SelectedType::Cylinder: {
+        ImGui::TextColored(ImVec4(0.8f, 0.6f, 1.0f, 1), "[Cylinder]");
+        ImGui::Separator();
+
+        if (ImGui::DragFloat3("Position", &cylinderPosition_.x, 0.1f)) {
+            cylinder_->SetPosition(cylinderPosition_);
+        }
+        if (ImGui::DragFloat3("Rotation", &cylinderRotation_.x, 0.01f)) {
+            cylinder_->SetRotation(cylinderRotation_);
+        }
+        if (ImGui::DragFloat("Scale", &cylinderScale_, 0.01f, 0.01f, 20.0f)) {
+            cylinder_->SetScale(cylinderScale_);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::DragFloat("Top Radius", &cylinderTopRadius_, 0.05f, 0.01f, 50.0f)) {
+            cylinder_->SetTopRadius(cylinderTopRadius_);
+        }
+        if (ImGui::DragFloat("Bottom Radius", &cylinderBottomRadius_, 0.05f, 0.01f, 50.0f)) {
+            cylinder_->SetBottomRadius(cylinderBottomRadius_);
+        }
+        if (ImGui::DragFloat("Height", &cylinderHeight_, 0.05f, 0.01f, 50.0f)) {
+            cylinder_->SetHeight(cylinderHeight_);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::ColorEdit4("Color", &cylinderColor_.x)) {
+            cylinder_->SetColor(cylinderColor_);
+        }
+        if (ImGui::SliderFloat("Alpha Reference", &cylinderAlphaRef_, 0.0f, 1.0f)) {
+            cylinder_->SetAlphaReference(cylinderAlphaRef_);
+        }
+
+        break;
+    }
+
+    case SelectedType::Skydome: {
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1), "[Skydome]");
+        ImGui::Separator();
+
+        if (ImGui::ColorEdit4("Sky Color", &skyColor_.x)) {
+            skydome_->SetSkyColor(skyColor_);
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::SliderFloat("Rotation Offset Y", &skyRotOffsetY_, -3.14159265f, 3.14159265f)) {
+            skydome_->SetRotationOffsetY(skyRotOffsetY_);
+        }
+
+        if (ImGui::Button("Reset Offset")) {
+            skyRotOffsetY_ = 0.0f;
+            skydome_->SetRotationOffsetY(0.0f);
+        }
+
+        break;
+    }
+
+    case SelectedType::UIElement: {
+        UIEntry& entry = uiElements_[editorSelectedIndex_];
+        Sprite* sp = entry.sprite.get();
+        ImGui::TextColored(ImVec4(1, 0.5f, 1, 1), "[UI Element]");
+        ImGui::Separator();
+
+        // 名前変更
+        static int lastUIIdx = -2;
+        static char uiNameBuf[64] = {};
+        
+        if (lastUIIdx != editorSelectedIndex_) {
+            lastUIIdx = editorSelectedIndex_;
+            strncpy_s(uiNameBuf, entry.name.c_str(), sizeof(uiNameBuf) - 1);
+        }
+
+        ImGui::SetNextItemWidth(-1);
+        
+        if (ImGui::InputText("##uiname", uiNameBuf, sizeof(uiNameBuf))) {
+            entry.name = uiNameBuf;
+        }
+
+        ImGui::Separator();
+
+        // 位置・サイズ・回転
+        Vector2 pos = sp->GetPosition();
+        
+        if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) {
+            sp->SetPosition(pos);
+        }
+
+        Vector2 sz = sp->GetSize();
+        
+        if (ImGui::DragFloat2("Size", &sz.x, 1.0f, 1.0f, 4096.0f)) {
+            sp->SetSize(sz);
+        }
+
+        float rot = sp->GetRotation();
+        
+        if (ImGui::DragFloat("Rotation", &rot, 0.01f)) {
+            sp->SetRotation(rot);
+        }
+
+        // 色
+        Vector4 col = sp->GetColor();
+        
+        if (ImGui::ColorEdit4("Color", &col.x)) {
+            sp->SetColor(col);
+        }
+
+        ImGui::Separator();
+
+        // テクスチャ
+        ImGui::TextDisabled("%.40s", entry.texPath.empty() ? "(no texture)" : entry.texPath.c_str());
+        
+        if (ImGui::Button("Browse##uitex")) {
+            std::string p = OpenFileDialog("PNG Files\0*.png\0All Files\0*.*\0\0", "Resources");
+            
+            if (!p.empty()) {
+                entry.texPath = p;
+                sp->SetTexture(p);
+            }
+        }
+
+        ImGui::Separator();
+        
+        if (ImGui::Button("Delete##ui")) {
+            uiElements_.erase(uiElements_.begin() + editorSelectedIndex_);
+            editorSelectedType_ = SelectedType::None;
+            editorSelectedIndex_ = -1;
+            lastUIIdx = -2;
+            SaveUILayout();
+        } else {
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Save##inspUI")) {
+                SaveUILayout();
+            }
+
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Load##inspUI")) {
+                LoadUILayout();
+            }
+        }
+
+        break;
+    }
+
+    case SelectedType::AnimatedCube: {
+        ImGui::TextColored(ImVec4(0.6f, 1.0f, 0.6f, 1), "[AnimatedCube]");
+        ImGui::Separator();
+
+        if (ImGui::DragFloat3("Position", &animCubePosition_.x, 0.1f)) {
+            if (animCube_) { animCube_->SetWorldOffset(animCubePosition_); }
+        }
+
+        if (ImGui::SliderFloat("Anim Speed", &animCubeSpeed_, 0.0f, 5.0f)) {
+            if (animCube_) { animCube_->SetAnimSpeed(animCubeSpeed_); }
+        }
+
+        if (ImGui::Button("Reset Position")) {
+            animCubePosition_ = { 10.0f, 2.0f, 0.0f };
+            if (animCube_) { animCube_->SetWorldOffset(animCubePosition_); }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Speed")) {
+            animCubeSpeed_ = 1.0f;
+            if (animCube_) { animCube_->SetAnimSpeed(animCubeSpeed_); }
+        }
+
+        break;
+    }
+
+    case SelectedType::Human: {
+        ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1), "[Human]");
+        ImGui::Separator();
+
+        if (ImGui::DragFloat3("Position", &humanPosition_.x, 0.05f)) {
+            if (human_) { human_->SetPosition(humanPosition_); }
+        }
+        if (ImGui::DragFloat3("Rotation", &humanRotation_.x, 0.01f)) {
+            if (human_) { human_->SetRotation(humanRotation_); }
+        }
+        if (ImGui::DragFloat3("Scale", &humanScale_.x, 0.01f, 0.001f, 100.0f)) {
+            if (human_) { human_->SetScale(humanScale_); }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::SliderFloat("Anim Speed", &humanAnimSpeed_, 0.0f, 5.0f)) {
+            if (human_) { human_->SetAnimSpeed(humanAnimSpeed_); }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Reset")) {
+            humanPosition_  = { 5.0f, 0.0f, 0.0f };
+            humanRotation_  = { 0.0f, 0.0f, 0.0f };
+            humanScale_     = { 1.0f, 1.0f, 1.0f };
+            humanAnimSpeed_ = 1.0f;
+            if (human_) {
+                human_->SetPosition(humanPosition_);
+                human_->SetRotation(humanRotation_);
+                human_->SetScale(humanScale_);
+                human_->SetAnimSpeed(humanAnimSpeed_);
+            }
+        }
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show Skeleton", &showSkeletonDebug_);
+
+        break;
+    }
+
+    case SelectedType::WhiteParticles: {
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1), "[White Particles]");
+        ImGui::Separator();
+
+        ImGui::DragFloat3("Position", &whiteParticlePos_.x, 0.1f);
+        ImGui::ColorEdit4("Color",    &whiteParticleColor_.x);
+        ImGui::DragFloat("Scale",     &whiteParticleScale_, 0.01f, 0.01f, 10.0f);
+        ImGui::SliderInt("Count",     &whiteParticleCount_, 1, 1024);
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Re-emit", ImVec2(-1, 0))) {
+            ParticleManager::GetInstance()->EmitScatterLoop(
+                "white", whiteParticlePos_, 20.0f,
+                static_cast<uint32_t>(whiteParticleCount_),
+                whiteParticleColor_,
+                2.0f, 5.0f,
+                whiteParticleScale_);
+        }
+        break;
+    }
+
+    default:
+        ImGui::TextDisabled("(Nothing selected)");
+        ImGui::TextDisabled("Hierarchy でオブジェクトを");
+        ImGui::TextDisabled("クリックしてください");
+        break;
+    }
+
+    ImGui::End();
+
+    // =====================================================
+    // Scene Controls（左下パネル）
+    // =====================================================
+    ImGui::SetNextWindowPos(ImVec2(0, 400), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(220, 320), ImGuiCond_Once);
+    ImGui::Begin("Scene Controls");
+
+    // スコア
+    if (ImGui::CollapsingHeader("Score")) {
+        ImGui::Text("Current : %d", ScoreManager::GetInstance()->GetCurrentScore());
+        const auto& ranking = ScoreManager::GetInstance()->GetRanking();
+        
+        if (ranking.empty()) {
+            ImGui::TextDisabled("  (no records)");
+        }
+
+        for (int i = 0; i < (int)ranking.size(); ++i) {
+            ImGui::Text("  %2d. %d", i + 1, ranking[i]);
+        }
+
+        if (ImGui::Button("Reset All Scores")) {
+            ScoreManager::GetInstance()->ResetAllScores();
+        }
+    }
+
+    // ゲーム時刻
+    if (ImGui::CollapsingHeader("Game Time")) {
+        ImGui::Text("Time : %02d:%02d", gameTime_.GetHour(), gameTime_.GetMinute());
+        
+        if (ImGui::Button("Skip 1 Hour")) {
+            gameTime_.SkipMinutes(60.0f);
+        }
+    }
+
+    // アクション
+    if (ImGui::CollapsingHeader("Actions")) {
+        if (ImGui::Button("Game Clear")) {
+            SceneManager::GetInstance()->ChangeScene("CLEAR");
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Game Over")) {
+            SceneManager::GetInstance()->ChangeScene("GAMEOVER");
+        }
+    }
+
+    // ポストプロセス
+    PostProcessManager::GetInstance()->ShowImGui();
+
+    ImGui::End();
+
+    // =====================================================
+    // Edit Mode（フローティングボタン）
+    // =====================================================
+    ImGui::SetNextWindowPos(ImVec2(230, 0), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(160, 60), ImGuiCond_Once);
+    ImGui::Begin("Edit Mode", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+    
+    if (debugEditMode_) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.3f, 0.1f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.4f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.2f, 0.0f, 1.0f));
+        
+        if (ImGui::Button("EDIT MODE ON", ImVec2(-1, 0))) {
+            debugEditMode_ = false;
+        }
+
+        ImGui::PopStyleColor(3);
+    } else {
+        if (ImGui::Button("EDIT MODE OFF", ImVec2(-1, 0))) {
+            debugEditMode_ = true;
+        }
+    }
+
+    ImGui::End();
+
+    // =====================================================
+    // Camera Control（常時表示・画面上部中央）
+    // =====================================================
+    ImGui::SetNextWindowPos(ImVec2(400, 0), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(300, 130), ImGuiCond_Once);
+    ImGui::Begin("Camera Control");
+
+    Vector3 camPos = camera_->GetTranslate();
+    Vector3 camRot = camera_->GetRotate();
+
+    if (ImGui::DragFloat3("Pos", &camPos.x, 0.1f)) {
+        camera_->SetTranslate(camPos);
+    }
+
+    if (ImGui::DragFloat3("Rot", &camRot.x, 0.01f)) {
+        camera_->SetRotate(camRot);
+    }
+
+    ImGui::Spacing();
+    
+    if (ImGui::Button("Center")) {
+        camera_->SetTranslate({ 0.0f, 0.0f, 0.0f });
+        camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
+    }
+
+    ImGui::SameLine();
+    
+    if (ImGui::Button("Save##cam")) {
+        SaveCameraParams();
+    }
+
+    ImGui::SameLine();
+    
+    if (ImGui::Button("Load##cam")) {
+        LoadCameraParams();
+    }
+
+    ImGui::End();
+#endif
+}
+
+// =====================================================
+// デバッグパラメータ JSON 保存 / 読み込み
+// =====================================================
+
+static float ReadJsonFloat(const std::string& src, const std::string& key, float def)
+{
+    std::string needle = "\"" + key + "\": ";
+    auto pos = src.find(needle);
+    
+    if (pos == std::string::npos) {
+        return def;
+    }
+
+    pos += needle.size();
+    
+    try {
+        return std::stof(src.substr(pos));
+    } catch (...) {
+        return def;
+    }
+}
+
+static int ReadJsonInt(const std::string& src, const std::string& key, int def)
+{
+    std::string needle = "\"" + key + "\": ";
+    auto pos = src.find(needle);
+    if (pos == std::string::npos) {
+        return def;
+    }
+
+    pos += needle.size();
+    
+    try {
+        return std::stoi(src.substr(pos));
+    } catch (...) {
+        return def;
+    }
+}
+
+static std::string ReadJsonString(const std::string& src, const std::string& key, const std::string& def)
+{
+    std::string needle = "\"" + key + "\":";
+    auto pos = src.find(needle);
+    
+    if (pos == std::string::npos) {
+        return def;
+    }
+
+    pos += needle.size();
+    
+    while (pos < src.size() && (src[pos] == ' ' || src[pos] == '\t')) {
+        pos++;
+    }
+
+    if (pos >= src.size() || src[pos] != '"') {
+        return def;
+    }
+
+    pos++;
+    auto end = src.find('"', pos);
+    
+    if (end == std::string::npos) {
+        return def;
+    }
+
+    return src.substr(pos, end - pos);
+}
+
+// ---- カメラ ----
+void GamePlayScene::SaveCameraParams()
+{
+    std::ofstream f("Resources/debug_camera.json");
+    
+    if (!f) {
+        return;
+    }
+
+    Vector3 cp = camera_->GetTranslate();
+    Vector3 cr = camera_->GetRotate();
+    f << "{\n";
+    f << "  \"camera_pos_x\": " << cp.x << ",\n";
+    f << "  \"camera_pos_y\": " << cp.y << ",\n";
+    f << "  \"camera_pos_z\": " << cp.z << ",\n";
+    f << "  \"camera_rot_x\": " << cr.x << ",\n";
+    f << "  \"camera_rot_y\": " << cr.y << ",\n";
+    f << "  \"camera_rot_z\": " << cr.z << "\n";
+    f << "}\n";
+}
+
+void GamePlayScene::LoadCameraParams()
+{
+    std::ifstream f("Resources/debug_camera.json");
+    
+    if (!f) {
+        return;
+    }
+
+    std::string src((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    Vector3 cp = {
+        ReadJsonFloat(src, "camera_pos_x", camera_->GetTranslate().x),
+        ReadJsonFloat(src, "camera_pos_y", camera_->GetTranslate().y),
+        ReadJsonFloat(src, "camera_pos_z", camera_->GetTranslate().z)
+    };
+    Vector3 cr = {
+        ReadJsonFloat(src, "camera_rot_x", camera_->GetRotate().x),
+        ReadJsonFloat(src, "camera_rot_y", camera_->GetRotate().y),
+        ReadJsonFloat(src, "camera_rot_z", camera_->GetRotate().z)
+    };
+    camera_->SetTranslate(cp);
+    camera_->SetRotate(cr);
+}
+
+// ---- モデルパス ----
+void GamePlayScene::SaveModelPaths()
+{
+}
+
+void GamePlayScene::LoadModelPaths()
+{
+}
+
+// ---- UI レイアウト ----
+void GamePlayScene::SaveUILayout()
+{
+    std::ofstream f("Resources/debug_ui.json");
+    
+    if (!f) {
+        return;
+    }
+
+    f << "{\n";
+    f << "  \"count\": " << uiElements_.size();
+    
+    for (int i = 0; i < (int)uiElements_.size(); i++) {
+        const UIEntry& e = uiElements_[i];
+        Sprite* sp = e.sprite.get();
+        Vector2 pos = sp->GetPosition();
+        Vector2 sz = sp->GetSize();
+        Vector4 col = sp->GetColor();
+        float rot = sp->GetRotation();
+        f << ",\n";
+        f << "  \"ui_" << i << "_name\":   \"" << e.name << "\",\n";
+        f << "  \"ui_" << i << "_tex\":    \"" << e.texPath << "\",\n";
+        f << "  \"ui_" << i << "_pos_x\":  " << pos.x << ",\n";
+        f << "  \"ui_" << i << "_pos_y\":  " << pos.y << ",\n";
+        f << "  \"ui_" << i << "_sz_x\":   " << sz.x << ",\n";
+        f << "  \"ui_" << i << "_sz_y\":   " << sz.y << ",\n";
+        f << "  \"ui_" << i << "_rot\":    " << rot << ",\n";
+        f << "  \"ui_" << i << "_col_r\":  " << col.x << ",\n";
+        f << "  \"ui_" << i << "_col_g\":  " << col.y << ",\n";
+        f << "  \"ui_" << i << "_col_b\":  " << col.z << ",\n";
+        f << "  \"ui_" << i << "_col_a\":  " << col.w;
+    }
+
+    f << "\n}\n";
+}
+
+void GamePlayScene::LoadUILayout()
+{
+    std::ifstream f("Resources/debug_ui.json");
+    
+    if (!f) {
+        return;
+    }
+
+    std::string src((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+
+    int count = ReadJsonInt(src, "count", 0);
+    uiElements_.clear();
+    editorSelectedType_ = SelectedType::None;
+    editorSelectedIndex_ = -1;
+
+    for (int i = 0; i < count; i++) {
+        auto mk = [&](const char* field) { return "ui_" + std::to_string(i) + field; };
+
+        UIEntry entry;
+        entry.name = ReadJsonString(src, mk("_name"), "UI Element");
+        entry.texPath = ReadJsonString(src, mk("_tex"), "");
+        entry.sprite = std::make_unique<Sprite>();
+        entry.sprite->Initialize(spriteCommon_.get(), entry.texPath);
+        entry.sprite->SetPosition({ ReadJsonFloat(src, mk("_pos_x"), 640.0f),
+            ReadJsonFloat(src, mk("_pos_y"), 360.0f) });
+        entry.sprite->SetSize({ ReadJsonFloat(src, mk("_sz_x"), 100.0f),
+            ReadJsonFloat(src, mk("_sz_y"), 100.0f) });
+        entry.sprite->SetRotation(ReadJsonFloat(src, mk("_rot"), 0.0f));
+        entry.sprite->SetColor({ ReadJsonFloat(src, mk("_col_r"), 1.0f),
+            ReadJsonFloat(src, mk("_col_g"), 1.0f),
+            ReadJsonFloat(src, mk("_col_b"), 1.0f),
+            ReadJsonFloat(src, mk("_col_a"), 1.0f) });
+        uiElements_.push_back(std::move(entry));
+    }
+}
+
+// =====================================================
+// 描画
+// =====================================================
+
 void GamePlayScene::DrawShadowPass()
 {
     ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
-
-    // 光源視点で深度バッファに描画する（この結果がシャドウマップになる）
     shadowManager_->BeginShadowPass(commandList);
     modelCommon_->BeginShadowPass();
-    // ※ ここでシャドウキャスター（影を落とすオブジェクト）の Draw を呼ぶ場所
 
     shadowManager_->EndShadowPass(commandList);
 
-    // ----- レンダーターゲットをメイン描画先に切り替える -----
-    // ポストエフェクトが有効なら専用 RTV（レンダーターゲットビュー）へ、
-    // そうでなければ通常のバックバッファへ描画先を設定する
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv;
-    if (imageFilter_->IsEnabled()) {
-        rtv = imageFilter_->GetSceneRTVHandle();
-    } else if (grayscaleEffect_->IsEnabled()) {
-        rtv = grayscaleEffect_->GetSceneRTVHandle();
-    } else if (hsvFilter_->IsEnabled()) {
-        rtv = hsvFilter_->GetSceneRTVHandle();
-    } else {
-        rtv = dxCommon_->GetCurrentBackBufferHandle();
-    }
-
-    // 深度ステンシルビュー（奥行き判定に使うバッファ）
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = dxCommon_->GetCurrentBackBufferHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = dxCommon_->GetDsvHandle();
-
-    // 描画先（RTV + DSV）と、描画範囲（ビューポート・シザー矩形）を GPU にセットする
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
-    D3D12_VIEWPORT vp = { 0, 0,
-        static_cast<float>(WinApp::kClientWidth), static_cast<float>(WinApp::kClientHeight),
-        0.0f, 1.0f };
-    D3D12_RECT scissor = { 0, 0, WinApp::kClientWidth, WinApp::kClientHeight };
+    D3D12_VIEWPORT vp = { 0, 0, 1280.0f, 720.0f, 0.0f, 1.0f };
+    D3D12_RECT scissor = { 0, 0, 1280, 720 };
     commandList->RSSetViewports(1, &vp);
     commandList->RSSetScissorRects(1, &scissor);
 }
 
 void GamePlayScene::Draw()
 {
-    // ----- オフスクリーンパス（赤でクリアしてSRVに遷移）-----
-    // 一旦テクスチャに描画してからスプライトとして貼ることで、ポストエフェクトをかけられる
-    renderTexture_->BeginRendering();
-    renderTexture_->EndRendering();
-
-    // シャドウマップの生成 + レンダーターゲットの切り替え
     DrawShadowPass();
 
-    // ----- 背景としてレンダーテクスチャを描画 -----
-    // 2D描画モードに切り替えてから、オフスクリーンで作ったテクスチャを画面いっぱいに貼る
-    spriteCommon_->CommonDrawSettings();
-    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), srvManager_);
-    renderTextureSprite_->Update();
-    renderTextureSprite_->Draw();
+    // 影パスがスワップチェーン RT に戻すため、オフスクリーン RT を再セット
+    PostProcessManager::GetInstance()->BeginCapture(
+        dxCommon_->GetCommandList(), dxCommon_);
 
-    // ----- 3Dオブジェクトを描画 -----
+    // 3Dオブジェクト
     modelCommon_->CommonDrawSettings();
-    objectCommon_->SetDefaultLight(dxCommon_->GetCommandList()); // ライト情報を GPU に送る
-    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), srvManager_); // シャドウマップをバインド
+    objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
+
+    // 天球（最初に描画して他のオブジェクトの背景とする）
+    skydome_->Draw();
 
     for (auto& obj : gameObjects_) {
         obj->Draw();
     }
 
-    // ----- スキンメッシュ描画 -----
-    // PSO（パイプラインステートオブジェクト）をスキンメッシュ用に切り替えてから描画する
-    // PSO 切り替え後はライト・シャドウの再バインドが必要
+    // スキンメッシュ描画（PSO 切り替え後にライト・シャドウを再バインド）
     skinCommon_->CommonDrawSettings();
     objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
-    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), srvManager_);
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
     human_->Draw();
 
-    // スケルトンのデバッグ表示（USE_IMGUI ビルド + フラグが ON の場合のみ）
+    // スケルトンデバッグ描画（3Dワールド空間）
 #ifdef USE_IMGUI
     if (showSkeletonDebug_ && human_) {
-        human_->DebugDraw(); // ボーンをワイヤーフレームで描画する
+        human_->DebugDraw();
     }
 #endif
 
-    // PSO を通常の 3D 描画用に戻す
+    // PSO を通常に戻す
     modelCommon_->CommonDrawSettings();
     objectCommon_->SetDefaultLight(dxCommon_->GetCommandList());
-    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), srvManager_);
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
 
-    // パーティクル・Ring・Cylinder を描画する
-    particleManager_->Update(camera_.get()); // GPU コンピュートで粒の位置を更新
-    particleManager_->Draw(camera_.get());   // 更新後のパーティクルを描画
+    ParticleManager::GetInstance()->Update(camera_.get());
+    ParticleManager::GetInstance()->Draw(camera_.get());
     ring_->Draw();
     cylinder_->Draw();
 
-    // ----- 2D UI（ImGuiで追加したスプライト要素）-----
-    // SceneEditor で追加したスプライト UI をすべて描画する
+    // 2D UI（ImGuiで追加したスプライト要素）
     spriteCommon_->CommonDrawSettings();
-    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), srvManager_);
+    shadowManager_->SetShadowMap(dxCommon_->GetCommandList(), SrvManager::GetInstance());
 
-    for (auto& e : sceneEditor_.GetUIElements()) {
+    for (auto& e : uiElements_) {
         e.sprite->Update();
         e.sprite->Draw();
     }
 }
 
+// いつか使うかも
+#if 0
+	if(false){
+		// --- 表示するスプライトと基準サイズの選択 ---
+		Sprite* currentFlavor = nullptr;
+		Sprite* currentGuide = nullptr;
+		Vector2 flavorSize = {500.0f, 200.0f}; // デフォルト値
+		Vector2 guideSize = {600.0f, 200.0f};  // デフォルト値
+		// --- ステップごとの画像・サイズ切り替えロジック ---
+
+		switch(tutorialStep_){
+		case TutorialStep::Move:
+			currentFlavor = moveUI_.get();
+			currentGuide = moveGuide_.get();
+			flavorSize = {500.0f, 200.0f};
+			guideSize = {600.0f, 200.0f};
+			break;
+
+		case TutorialStep::Shoot:
+			currentFlavor = shootUI_.get();
+			currentGuide = shootGuide_.get();
+			flavorSize = {828.0f, 252.0f};
+			guideSize = {703.0f, 114.0f};
+			break;
+
+		case TutorialStep::ScrollStart:
+			currentFlavor = scrollStartUI_.get();
+			flavorSize = {855.0f, 124.0f};
+			currentGuide = nullptr; // ガイドなし
+			break;
+
+		case TutorialStep::BattleTrain:
+			currentFlavor = battleTrainUI_.get();
+			currentGuide = battleTrainGuide_.get(); // ★追加
+			flavorSize = {822.0f, 123.0f};
+			guideSize = {590.0f, 109.0f};
+			break;
+
+		case TutorialStep::SwipeTrain:
+			currentFlavor = swipeTrainUI_.get();
+			currentGuide = swipeTrainGuide_.get(); // ★追加
+			flavorSize = {771.0f, 122.0f};
+			guideSize = {459.0f, 153.0f};
+			break;
+
+		case TutorialStep::SpecialMove:
+			currentFlavor = specialMoveUI_.get();
+			currentGuide = specialMoveGuide_.get(); // ★追加
+			flavorSize = {714.0f, 221.0f};
+			guideSize = {619.0f, 101.0f};
+			break;
+
+		case TutorialStep::Epilogue:
+			currentFlavor = epilogueUI_.get();
+			flavorSize = {717.0f, 213.0f};
+			currentGuide = nullptr; // ガイドなし
+			break;
+		}
+
+		// --- 選択されたスプライトがある場合のみ描画処理を実行 ---
+		if(currentFlavor){
+			// --- アニメーション用パラメータ ---
+			Vector2 pos = {450.0f, 100.0f}; // 中央上部
+			Vector2 size = flavorSize;
+			Vector4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+
+			// --- 1枚目（Flavor: セリフ枠）のアニメーション ---
+			if(displayTimer_ <= 1.0f){
+				color.w = 0.0f; // 待機
+			} else if(displayTimer_ <= 1.5f){
+				// 1. 出現 (1.0s ～ 1.5s): 画面中央へズームイン
+				float t = (displayTimer_ - 1.0f) / 0.5f;
+				pos = {450.0f, 150.0f - (50.0f * t)};
+				size = {flavorSize.x * t, flavorSize.y * t}; // flavorSize基準でズーム
+				color.w = t;
+			} else if(displayTimer_ <= 3.0f){
+				// 2. 中央静止 (1.5s ～ 3.0s)
+				pos = {450.0f, 100.0f};
+				size = flavorSize;
+			} else if(displayTimer_ <= 3.5f){
+				// 3. 右上へ移動 (3.0s ～ 3.5f)
+				float t = (displayTimer_ - 3.0f) / 0.5f;
+				pos.x = 450.0f + (1050.0f - 450.0f) * t;
+				pos.y = 100.0f + (120.0f - 100.0f) * t;
+				// 右上の定位置（250x80）へ縮小
+				size.x = flavorSize.x + (250.0f - flavorSize.x) * t;
+				size.y = flavorSize.y + (80.0f - flavorSize.y) * t;
+			} else{
+				// 4. 右上で待機 ＆ 消失
+				pos = {1050.0f, 120.0f};
+				size = {250.0f, 80.0f};
+
+				if(isExiting_){
+					// エラー回避：マクロ競合を避けるため、std::maxの代わりに三項演算子を使用
+					float rawT = (0.5f - exitTimer_) / 0.5f;
+					float t = (rawT > 0.0f)?rawT:0.0f; // std::max(0.0f, rawT) と同等
+
+					color.w = t;
+					pos.x += (1.0f - t) * 30.0f; // 右へスライドして消える
+				}
+			}
+
+			currentFlavor->SetPosition(pos);
+			currentFlavor->SetSize(size);
+			currentFlavor->SetColor(color);
+			currentFlavor->Update();
+			currentFlavor->Draw();
+
+			// --- 2枚目（Guide: 操作説明）のアニメーション ---
+			if(displayTimer_ > 3.5f && currentGuide){
+				Vector2 posG = {640.0f, 360.0f}; // 画面中央
+				Vector2 sizeG = guideSize;
+				Vector4 colorG = {1.0f, 1.0f, 1.0f, 1.0f};
+
+				// 出現フェードイン (0.3s)
+				// エラー回避：std::minの代わりに三項演算子を使用
+				float rawFade = (displayTimer_ - 3.5f) / 0.3f;
+				float fadeIn = (rawFade < 1.0f)?rawFade:1.0f; // std::min(1.0f, rawFade) と同等
+				colorG.w = fadeIn;
+
+				if(isExiting_){
+					// 消失フェードアウト（1枚目と同期）
+					float rawT = (0.5f - exitTimer_) / 0.5f;
+					float t = (rawT > 0.0f)?rawT:0.0f;
+
+					colorG.w = t;
+					posG.y -= (1.0f - t) * 20.0f; // 上へ浮きながら消える
+				}
+
+				currentGuide->SetPosition(posG);
+				currentGuide->SetSize(sizeG);
+				currentGuide->SetColor(colorG);
+				currentGuide->Update();
+				currentGuide->Draw();
+			}
+		}
+
+		// スキップUI（リターンキー）は常に表示
+		skipUI_->Update();
+		skipUI_->Draw();
+	} else{
+		// ゲーム本編のUI表示（既存の処理）
+		timeDisplay_.Draw();
+		for(auto& e : uiElements_){
+			e.sprite->Update();
+			e.sprite->Draw();
+		}
+	}
+
+	fade_.Draw();
+}
+
+#endif // end of removed Draw code
+
 // =====================================================
-// 終了（シーン切り替えやゲーム終了時に1度だけ呼ばれる）
+// 終了
 // =====================================================
 
 void GamePlayScene::Finalize()
 {
-    // 音を全部止める（BGM・SE どちらも）
     if (audio_) {
         audio_->StopBGM();
         audio_->StopAllSE();
     }
-
-    // パーティクルを全グループ削除する（メモリリーク防止）
-    if (particleManager_) { particleManager_->ClearAllGroups(); }
+    ParticleManager::GetInstance()->ClearAllGroups();
 }

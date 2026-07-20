@@ -6,10 +6,7 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
-#include "GrayscaleEffect.h"
-#include "ImageFilter.h"
-#include "VignetteEffect.h"
-#include "HsvFilter.h"
+#include "PostProcessManager.h"
 
 void Framework::Run()
 {
@@ -36,10 +33,6 @@ void Framework::Initialize()
     dxCommon_->Initialize(winApp_.get());
 
     SrvManager::GetInstance()->Initialize(dxCommon_.get());
-    GrayscaleEffect::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
-    ImageFilter::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
-    VignetteEffect::GetInstance()->Initialize(dxCommon_.get());
-    HsvFilter::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
     TextureManager::GetInstance()->Initialize(dxCommon_.get());
     ParticleManager::GetInstance()->Initialize(dxCommon_.get());
 
@@ -51,6 +44,8 @@ void Framework::Initialize()
 
     imguiManager_ = std::make_unique<ImGuiManager>();
     imguiManager_->Initialize(winApp_.get(), dxCommon_.get());
+
+    PostProcessManager::GetInstance()->Initialize(dxCommon_.get(), SrvManager::GetInstance());
 }
 
 void Framework::Update()
@@ -62,6 +57,17 @@ void Framework::Update()
     if (input_->TriggerKey(DIK_F11)) {
         winApp_->ToggleFullscreen();
     }
+
+    // 数字キー(1〜9)でポストエフェクトのON/OFFを切り替え（リリースビルドでも確認できるように）
+    if (input_->TriggerKey(DIK_1)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Grayscale); }
+    if (input_->TriggerKey(DIK_2)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Vignette); }
+    if (input_->TriggerKey(DIK_3)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::BoxFilter); }
+    if (input_->TriggerKey(DIK_4)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Gaussian); }
+    if (input_->TriggerKey(DIK_5)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::LumOutline); }
+    if (input_->TriggerKey(DIK_6)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::DepthOutline); }
+    if (input_->TriggerKey(DIK_7)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::RadialBlur); }
+    if (input_->TriggerKey(DIK_8)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Dissolve); }
+    if (input_->TriggerKey(DIK_9)) { PostProcessManager::GetInstance()->ToggleEffect(PostEffectType::Random); }
 }
 
 void Framework::Finalize()
@@ -76,10 +82,7 @@ void Framework::Finalize()
     }
 
     // 各種マネージャーのGPUリソースを解放する
-    HsvFilter::GetInstance()->Finalize();
-    VignetteEffect::GetInstance()->Finalize();
-    ImageFilter::GetInstance()->Finalize();
-    GrayscaleEffect::GetInstance()->Finalize();
+    PostProcessManager::GetInstance()->Finalize();
     ParticleManager::GetInstance()->Finalize();
     MeshManager::GetInstance()->Finalize();
     MaterialManager::GetInstance()->Finalize();

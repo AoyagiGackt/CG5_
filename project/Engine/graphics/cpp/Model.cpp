@@ -174,9 +174,9 @@ void Model::LoadObjFile(const std::string& filePath)
                     faceIndices.push_back(newIndex);
 
                     VertexData vd {};
-                    if (idx[0] > 0) vd.position = positions[idx[0] - 1];
-                    if (idx[1] > 0) vd.texcoord = texcoords[idx[1] - 1];
-                    if (idx[2] > 0) vd.normal = normals[idx[2] - 1];
+                    if (idx[0] > 0) { vd.position = positions[idx[0] - 1]; }
+                    if (idx[1] > 0) { vd.texcoord = texcoords[idx[1] - 1]; }
+                    if (idx[2] > 0) { vd.normal = normals[idx[2] - 1]; }
                     vertices_.push_back(vd);
                 }
             }

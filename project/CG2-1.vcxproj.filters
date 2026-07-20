@@ -34,13 +34,10 @@
     <FxCompile Include="Resources\shaders\Particle\EmitParticle.CS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\FullscreenVS.hlsl">
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\GrayscalePS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\HsvFilterPS.hlsl">
+    <FxCompile Include="Resources\shaders\postProcess\PostProcess.PS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Resources\shaders\Particle\ParticleUpdate.CS.hlsl">
@@ -53,30 +50,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Resources\shaders\skinned\SkinningCS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\VignettePS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\KernelFilterPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\GaussianFilterPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\PrewittEdgePS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\DepthOutlinePS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\RadialBlurPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\DissolvePS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Resources\shaders\postprocess\NoisePS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
@@ -177,12 +150,6 @@
     <ClCompile Include="Engine\game\cpp\GameObject.cpp">
       <Filter>ソースファイル\Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\GrayscaleEffect.cpp">
-      <Filter>ソースファイル\Engine\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\HsvFilter.cpp">
-      <Filter>ソースファイル\Engine\Object</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\graphics\cpp\ImguiControl.cpp">
       <Filter>ソースファイル\Engine\ImGui</Filter>
     </ClCompile>
@@ -199,6 +166,9 @@
       <Filter>ソースファイル\Game\Core</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\GamePlayScene.cpp">
+      <Filter>ソースファイル\Game\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\game\cpp\hoge.cpp">
       <Filter>ソースファイル\Game\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\SceneEditor.cpp">
@@ -246,9 +216,6 @@
     <ClCompile Include="Engine\graphics\cpp\Ring.cpp">
       <Filter>ソースファイル\Game\Particle</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\RenderTexture.cpp">
-      <Filter>ソースファイル\Engine\Offscreen</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\graphics\cpp\Skeleton.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
     </ClCompile>
@@ -267,11 +234,8 @@
     <ClCompile Include="Engine\graphics\cpp\SkinCS.cpp">
       <Filter>ソースファイル\Engine\Skeleton</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\VignetteEffect.cpp">
-      <Filter>ソースファイル\Engine\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\ImageFilter.cpp">
-      <Filter>ソースファイル\Game\Particle</Filter>
+    <ClCompile Include="Engine\graphics\cpp\PostProcessManager.cpp">
+      <Filter>ソースファイル\Engine\PostProcess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -401,6 +365,9 @@
     <ClInclude Include="Engine\game\h\GamePlayScene.h">
       <Filter>ヘッダーファイル\Game\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\game\h\hoge.h">
+      <Filter>ヘッダーファイル\Game\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\game\h\SceneEditor.h">
       <Filter>ヘッダーファイル\Game\Scene</Filter>
     </ClInclude>
@@ -424,12 +391,6 @@
     </ClInclude>
     <ClInclude Include="Engine\game\h\GameTime.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\graphics\h\GrayscaleEffect.h">
-      <Filter>ヘッダーファイル\Engine\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\graphics\h\HsvFilter.h">
-      <Filter>ヘッダーファイル\Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="Engine\graphics\h\ImguiControl.h">
       <Filter>ヘッダーファイル\Engine\ImGui</Filter>
@@ -461,9 +422,6 @@
     <ClInclude Include="Engine\graphics\h\Ring.h">
       <Filter>ヘッダーファイル\Game\Particle</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\graphics\h\RenderTexture.h">
-      <Filter>ヘッダーファイル\Engine\Offscreen</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\graphics\h\Skeleton.h">
       <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
     </ClInclude>
@@ -482,11 +440,8 @@
     <ClInclude Include="Engine\graphics\h\SkinCS.h">
       <Filter>ヘッダーファイル\Engine\Skeleton</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\graphics\h\VignetteEffect.h">
-      <Filter>ヘッダーファイル\Engine\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\graphics\h\ImageFilter.h">
-      <Filter>ヘッダーファイル\Engine\Particle</Filter>
+    <ClInclude Include="Engine\graphics\h\PostProcessManager.h">
+      <Filter>ヘッダーファイル\Engine\PostProcess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -663,10 +618,10 @@
     <Filter Include="ヘッダーファイル\Engine\Skeleton">
       <UniqueIdentifier>{47c68c08-6ded-4851-b605-c8f8a73b2e94}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソースファイル\Engine\Offscreen">
+    <Filter Include="ソースファイル\Engine\PostProcess">
       <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダーファイル\Engine\Offscreen">
+    <Filter Include="ヘッダーファイル\Engine\PostProcess">
       <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -782,12 +737,6 @@
       <Filter>ソースファイル\Engine\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Engine\game\cpp\GameObject.cpp">
-      <Filter>ソースファイル\Engine\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\GrayscaleEffect.cpp">
-      <Filter>ソースファイル\Engine\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\graphics\cpp\HsvFilter.cpp">
       <Filter>ソースファイル\Engine\Object</Filter>
     </ClCompile>
     <ClCompile Include="Engine\graphics\cpp\ImguiControl.cpp">
@@ -995,12 +944,6 @@
     </ClInclude>
     <ClInclude Include="Engine\game\h\GameTime.h">
       <Filter>ヘッダーファイル\Game\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\graphics\h\GrayscaleEffect.h">
-      <Filter>ヘッダーファイル\Engine\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\graphics\h\HsvFilter.h">
-      <Filter>ヘッダーファイル\Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="Engine\graphics\h\ImguiControl.h">
       <Filter>ヘッダーファイル\Engine\ImGui</Filter>

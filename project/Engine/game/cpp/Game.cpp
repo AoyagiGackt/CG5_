@@ -4,10 +4,7 @@
 #include "SceneFactory.h"
 #include "TitleScene.h"
 #include <SrvManager.h>
-#include "GrayscaleEffect.h"
-#include "ImageFilter.h"
-#include "VignetteEffect.h"
-#include "HsvFilter.h"
+#include "PostProcessManager.h"
 #include "ImguiControl.h"
 
 void MyGame::Initialize()
@@ -49,34 +46,16 @@ void MyGame::Draw()
     dxCommon_->PreDraw();
     SrvManager::GetInstance()->PreDraw();
 
-    auto* gs        = GrayscaleEffect::GetInstance();
-    auto* imgFilter = ImageFilter::GetInstance();
-    auto* hsv       = HsvFilter::GetInstance();
+    // オフスクリーン RT をアクティブにする
+    PostProcessManager::GetInstance()->BeginCapture(
+        dxCommon_->GetCommandList(), dxCommon_.get());
 
-    // 有効なシーンキャプチャフィルターへ描画先を切り替える（優先順位: ImageFilter > Grayscale > HSV）
-    if (imgFilter->IsEnabled()) {
-        imgFilter->BeginScene();
-    } else if (gs->IsEnabled()) {
-        gs->BeginScene();
-    } else if (hsv->IsEnabled()) {
-        hsv->BeginScene();
-    }
-
-    // 現在のシーンの描画
+    // 現在のシーンの描画（シーン内部で影パス後に再度 BeginCapture が呼ばれる）
     SceneManager::GetInstance()->Draw();
 
-    if (imgFilter->IsEnabled()) {
-        imgFilter->EndScene();
-        imgFilter->Apply(SrvManager::GetInstance());
-    } else if (gs->IsEnabled()) {
-        gs->EndScene();
-        gs->Apply(SrvManager::GetInstance());
-    } else if (hsv->IsEnabled()) {
-        hsv->EndScene();
-        hsv->Apply(SrvManager::GetInstance());
-    }
-
-    VignetteEffect::GetInstance()->Apply();
+    // ポストプロセスを適用してスワップチェーンへ出力
+    PostProcessManager::GetInstance()->Apply(
+        dxCommon_->GetCommandList(), dxCommon_.get(), SrvManager::GetInstance());
 
     imguiManager_->Draw(dxCommon_.get());
 

@@ -150,8 +150,9 @@ void ParticleManager::CreateParticleGroup(const std::string& name,
 
     group.freeList.clear();
     group.freeList.reserve(ParticleGroup::kNumMaxInstance);
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > 0; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > 0; ) {
         group.freeList.push_back(i);
+    }
 
     // ---- エミッターバッファ (UPLOAD heap, 256 bytes, 常時マップ) ----
     group.emitterBuffer = dxCommon_->CreateBufferResource(256);
@@ -312,8 +313,9 @@ void ParticleManager::EmitScatterLoop(const std::string& name,
     memset(group.particleUploadData, 0, sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance);
     group.slotExpiry.fill(0.0f);
     group.freeList.clear();
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; ) {
         group.freeList.push_back(i);
+    }
     group.pendingSlots.clear();
 
     for (uint32_t i = 0; i < count; ++i) {
@@ -359,8 +361,9 @@ void ParticleManager::EmitBurst(const std::string& name,
         sizeof(GPUParticleState) * ParticleGroup::kNumMaxInstance);
     group.slotExpiry.fill(0.0f);
     group.freeList.clear();
-    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; )
+    for (uint32_t i = ParticleGroup::kNumMaxInstance; i-- > count; ) {
         group.freeList.push_back(i);
+    }
 
     for (uint32_t i = 0; i < count; ++i) {
         GPUParticleState& p = group.particleUploadData[i];
